@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://creightontracker.com/support" />
+  <title>Support — Creighton Cycle Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/app-icons/icon-192x192.png" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #fafaf7;
+      --fg: #1f1d1c;
+      --muted: #6b6760;
+      --accent: #7b5556;
+      --border: #e6e3dc;
+      --card: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1f1d1c;
+        --fg: #f0ebe2;
+        --muted: #a89f93;
+        --accent: #d8a8a9;
+        --border: #3a3835;
+        --card: #28262420;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+      line-height: 1.6;
+      background: var(--bg);
+      color: var(--fg);
+    }
+    h1 { font-size: 1.8rem; line-height: 1.25; margin: 0 0 8px; }
+    h2 { font-size: 1.25rem; margin-top: 2em; }
+    h3 { font-size: 1.05rem; margin-top: 1.4em; }
+    p, li { font-size: 0.95rem; }
+    code { background: rgba(125, 125, 125, 0.16); padding: 0 4px; border-radius: 3px; font-size: 0.85em; }
+    a { color: var(--accent); }
+    hr { border: 0; border-top: 1px solid var(--border); margin: 2em 0; }
+    nav { font-size: 0.85rem; margin-bottom: 1em; }
+    .lead { font-size: 1rem; color: var(--muted); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    details {
+      margin: 10px 0;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    details summary {
+      cursor: pointer;
+      font-weight: 600;
+      padding: 6px 0;
+    }
+    details[open] summary { color: var(--accent); }
+    details > *:not(summary) { font-size: 0.92rem; }
+    footer { margin-top: 3em; font-size: 0.85rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<nav><a href="/">&larr; Creighton Cycle Tracker</a></nav>
+
+<h1>Support</h1>
+<p class="lead">Help, troubleshooting, and how to reach the developer.</p>
+
+<div class="card">
+  <p style="margin:0 0 12px"><strong>Got a question, bug, or feature request?</strong> Email me directly &mdash; I read every message.</p>
+  <p style="margin:0">
+    <a class="btn" href="mailto:jacob@stephens.page?subject=Creighton%20Tracker%20%E2%80%94%20Support">Email jacob@stephens.page</a>
+    &nbsp;
+    <a class="btn btn-secondary" href="https://github.com/JacobStephens2/CreightonTrackingApp/issues">Open a GitHub issue</a>
+  </p>
+</div>
+
+<h2>Common questions</h2>
+
+<details>
+  <summary>Where is my data stored?</summary>
+  <p>By default, every observation lives on your device in IndexedDB. The app works fully offline. If (and only if) you create an account and sign in, your observations are end-to-end encrypted on your device using a key derived from your password, then backed up to our server. We cannot read your synced health data &mdash; the server stores encrypted blobs only.</p>
+  <p>See the full <a href="/privacy">Privacy Policy</a> for details.</p>
+</details>
+
+<details>
+  <summary>How do I share my chart with my FertilityCare Practitioner?</summary>
+  <p>Sign in (or create an account), then go to <strong>Settings &rarr; Provider Sharing</strong> and tap <strong>Generate Link</strong>. Send the link to your practitioner. They can view a read-only version of your chart at that URL without needing an account of their own. The link expires after 90 days, and you can revoke it at any time from the same screen.</p>
+  <p>The shared view excludes your private <strong>notes</strong> field. Bleeding, mucus observations, peak day, post-peak count, and the intercourse indicator are all visible to the practitioner.</p>
+</details>
+
+<details>
+  <summary>I forgot my password. Can you recover my data?</summary>
+  <p>You can reset your password from the sign-in screen by entering your email. <strong>However</strong>, because your observations are encrypted with a key derived from your old password, resetting the password means the previously synced data on the server can no longer be decrypted and will be lost. Your <em>local on-device</em> data is unaffected if you do the reset on the same device that already has the data.</p>
+  <p>If you only had data on a device you no longer have access to, that data is unfortunately not recoverable &mdash; this is the trade-off for the end-to-end encryption that prevents anyone (including us) from being able to read your data.</p>
+</details>
+
+<details id="delete">
+  <summary>How do I delete my Creighton Cycle Tracker account and data?</summary>
+  <p><strong>App name:</strong> Creighton Cycle Tracker (<code>com.creighton.tracker</code>).</p>
+  <p><strong>How to delete:</strong> open the app, go to <strong>Settings &rarr; Account &amp; Sync &rarr; Delete Account</strong>, re-enter your password to confirm, and tap <strong>Permanently delete my account</strong>.</p>
+  <p><strong>What is deleted</strong> (immediately, on confirmation):</p>
+  <ul>
+    <li>Your <strong>account record</strong> on our server (email address, first name, hashed password).</li>
+    <li>All <strong>synced observations and cycles</strong> backed up to our server (end-to-end encrypted blobs).</li>
+    <li>Any active <strong>provider share-link tokens</strong> &mdash; the share URL stops working instantly.</li>
+    <li>Any pending <strong>email-verification</strong> or <strong>password-reset</strong> tokens for your account.</li>
+    <li>Your <strong>local on-device data</strong> on the device where you confirm the deletion (IndexedDB observations, cycles, and settings are cleared).</li>
+  </ul>
+  <p><strong>What is retained:</strong> nothing related to your account is retained server-side after the operation completes. Anonymized HTTP server access logs (IP address + request URL only) may persist for up to 30 days as part of standard operational logging.</p>
+  <p><strong>Retention period:</strong> deletion is <strong>immediate</strong>. The server-side database row is removed inside a single SQL transaction at the moment you tap the confirmation button; there is no retention window or recovery period. If you change your mind after the fact, you must register a new account from scratch &mdash; previously synced encrypted data cannot be recovered because (a) the row no longer exists and (b) we never held the decryption key.</p>
+  <p><strong>If you want a manual deletion instead:</strong> email <a href="mailto:jacob@stephens.page">jacob@stephens.page</a> from the email address associated with the account. Manual deletion is performed within 30 days of a verified request.</p>
+  <p>To delete on-device data only (without deleting the account): open the app, sign out, and either delete individual observations from the chart or calendar views, or uninstall the app entirely.</p>
+</details>
+
+<details>
+  <summary>The chart isn't showing my most recent observations.</summary>
+  <p>First, check your <strong>cycle boundary</strong>. If the app drew the wrong boundary (for example, treating Very Light bleeding at the start of a period as still part of the previous cycle), open that observation and toggle <strong>First Day of Cycle</strong> on. The chart will redraw.</p>
+  <p>Second, check the <strong>chart zoom level</strong>. Normal/Compact/Trend toggles are at the top right of the chart view.</p>
+  <p>If observations are still missing, hit <strong>Settings &rarr; Upload to Server</strong> to force a re-sync, then refresh the page (or fully close and reopen the app on Android).</p>
+</details>
+
+<details>
+  <summary>Why don't the purple intercourse dots show up on the provider's share link?</summary>
+  <p>They should &mdash; provider sharing now includes the intercourse indicator. If you're not seeing them, your saved server snapshot may be stale from before the May 2026 update. Open the app, hit <strong>Settings &rarr; Upload to Server</strong>, then refresh the share link.</p>
+</details>
+
+<details>
+  <summary>How do I export my data?</summary>
+  <p><strong>Settings &rarr; Data Management</strong> offers JSON backup (everything, restorable) and CSV chart export (cycle-level summary, friendly for spreadsheets and printing). You can also save the chart as a PNG image or print it directly.</p>
+</details>
+
+<details>
+  <summary>The Android app feels stuck on an old version.</summary>
+  <p>The Capacitor app loads its web bundle live from <code>creightontracker.com</code>, but a service worker caches files for offline use. To force the newest version, fully close the app (swipe out of recents) and reopen. The new bundle activates immediately on next launch.</p>
+</details>
+
+<details>
+  <summary>What's the difference between this app and the FertilityCare app from my practitioner?</summary>
+  <p>Creighton Cycle Tracker is an <strong>independent</strong> open-source project built by Jacob Stephens. It is not affiliated with, endorsed by, or sponsored by FertilityCare Centers of America, Creighton University, or the Saint Paul VI Institute. Creighton Model FertilityCare&trade; System is a trademark of FertilityCare Centers of America, used here descriptively only.</p>
+  <p>This app is a charting tool only. It is not a substitute for instruction from a certified FertilityCare Practitioner. To find an instructor in your area, visit <a href="https://www.fertilitycare.org/find-a-center/">FertilityCare.org</a>.</p>
+</details>
+
+<details>
+  <summary>Is there a cost?</summary>
+  <p>No. The app is free, has no ads, no in-app purchases, and no premium tier. It will stay that way.</p>
+</details>
+
+<details>
+  <summary>How do I report a bug?</summary>
+  <p>Easiest: <strong>Settings &rarr; Send Feedback</strong> in the app &mdash; that opens a pre-filled email with your device's user-agent string included for context.</p>
+  <p>Otherwise: email <a href="mailto:jacob@stephens.page">jacob@stephens.page</a> or open an issue on <a href="https://github.com/JacobStephens2/CreightonTrackingApp/issues">GitHub</a>.</p>
+</details>
+
+<h2>Source and changelog</h2>
+<p>The app is open source. Browse the code, check release notes, or follow development at <a href="https://github.com/JacobStephens2/CreightonTrackingApp">github.com/JacobStephens2/CreightonTrackingApp</a>.</p>
+
+<h2>Related</h2>
+<ul>
+  <li><a href="/">Open the web app</a></li>
+  <li><a href="/privacy">Privacy Policy</a></li>
+  <li><a href="https://www.fertilitycare.org/">FertilityCare.org</a> &mdash; find a certified practitioner</li>
+  <li><a href="https://saintpaulvi.com/">Saint Paul VI Institute</a></li>
+</ul>
+
+<footer>
+  Built by <a href="https://stephens.page">Jacob Stephens</a>.
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,223 @@
+/* Stamp component styles */
+.stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.stamp-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  position: relative;
+  border: 2px solid transparent;
+  transition: transform 0.1s;
+}
+
+/* Chart-view stamps respect the chart container's zoom level */
+.chart-container .stamp-circle {
+  width: var(--stamp-size, 36px);
+  height: var(--stamp-size, 36px);
+  font-size: var(--stamp-font, 0.75rem);
+}
+.chart-container .stamp-code {
+  font-size: var(--code-font, 0.5625rem);
+  max-width: var(--code-max, 44px);
+}
+.chart-container .stamp-day {
+  font-size: var(--day-font, 0.625rem);
+}
+
+.stamp-circle:active {
+  transform: scale(0.9);
+}
+
+/* Stamp colors */
+.stamp-green .stamp-circle {
+  background: var(--stamp-green);
+  color: var(--text-on-dark);
+}
+
+.stamp-greenBaby .stamp-circle {
+  background: var(--stamp-green);
+  color: var(--text-on-dark);
+}
+
+.stamp-red .stamp-circle {
+  background: var(--stamp-red);
+  color: var(--text-on-dark);
+}
+
+.stamp-white .stamp-circle,
+.stamp-whiteBaby .stamp-circle,
+.stamp-whiteBabyP .stamp-circle,
+.stamp-whiteBaby1 .stamp-circle,
+.stamp-whiteBaby2 .stamp-circle,
+.stamp-whiteBaby3 .stamp-circle {
+  background: var(--stamp-white);
+  border-color: #BDBDBD;
+  color: var(--text-primary);
+}
+
+.stamp-greenBaby1 .stamp-circle,
+.stamp-greenBaby2 .stamp-circle,
+.stamp-greenBaby3 .stamp-circle {
+  background: var(--stamp-green);
+  color: var(--text-on-dark);
+}
+
+.stamp-yellow .stamp-circle {
+  background: var(--stamp-yellow);
+  color: var(--text-primary);
+}
+
+.stamp-yellowBaby .stamp-circle {
+  background: var(--stamp-yellow);
+  color: var(--text-primary);
+}
+
+.stamp-yellowBaby1 .stamp-circle,
+.stamp-yellowBaby2 .stamp-circle,
+.stamp-yellowBaby3 .stamp-circle {
+  background: var(--stamp-yellow);
+}
+
+/* Force the peak-day P and post-peak count digits to render in pure black
+ * for contrast on the light (white / yellow) backgrounds. Green count
+ * stamps keep their existing white-on-green text. */
+.stamp-whiteBabyP .stamp-circle,
+.stamp-whiteBaby1 .stamp-circle,
+.stamp-whiteBaby2 .stamp-circle,
+.stamp-whiteBaby3 .stamp-circle,
+.stamp-yellowBaby1 .stamp-circle,
+.stamp-yellowBaby2 .stamp-circle,
+.stamp-yellowBaby3 .stamp-circle {
+  color: #000;
+}
+
+/* Baby indicator dot */
+.stamp-baby-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #FF9800;
+  border: 1.5px solid var(--bg-card);
+  display: none;
+}
+
+.stamp-greenBaby .stamp-baby-dot,
+.stamp-whiteBaby .stamp-baby-dot,
+.stamp-whiteBabyP .stamp-baby-dot,
+.stamp-whiteBaby1 .stamp-baby-dot,
+.stamp-whiteBaby2 .stamp-baby-dot,
+.stamp-whiteBaby3 .stamp-baby-dot,
+.stamp-greenBaby1 .stamp-baby-dot,
+.stamp-greenBaby2 .stamp-baby-dot,
+.stamp-greenBaby3 .stamp-baby-dot,
+.stamp-yellowBaby .stamp-baby-dot,
+.stamp-yellowBaby1 .stamp-baby-dot,
+.stamp-yellowBaby2 .stamp-baby-dot,
+.stamp-yellowBaby3 .stamp-baby-dot {
+  display: block;
+}
+
+/* Faint baby chick behind the P / number on peak-day and post-peak count stamps */
+.stamp-whiteBabyP .stamp-circle::before,
+.stamp-whiteBaby1 .stamp-circle::before,
+.stamp-whiteBaby2 .stamp-circle::before,
+.stamp-whiteBaby3 .stamp-circle::before,
+.stamp-greenBaby1 .stamp-circle::before,
+.stamp-greenBaby2 .stamp-circle::before,
+.stamp-greenBaby3 .stamp-circle::before,
+.stamp-yellowBaby1 .stamp-circle::before,
+.stamp-yellowBaby2 .stamp-circle::before,
+.stamp-yellowBaby3 .stamp-circle::before {
+  content: '🐣';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  /* Tuck the chick toward the lower-right so the count digit reads cleanly
+   * in the center of the circle. */
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 2px 0 0;
+  font-size: 0.7em;
+  font-weight: normal;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Make the P / count digit itself the dominant element. */
+.stamp-whiteBabyP .stamp-circle,
+.stamp-whiteBaby1 .stamp-circle,
+.stamp-whiteBaby2 .stamp-circle,
+.stamp-whiteBaby3 .stamp-circle,
+.stamp-greenBaby1 .stamp-circle,
+.stamp-greenBaby2 .stamp-circle,
+.stamp-greenBaby3 .stamp-circle,
+.stamp-yellowBaby1 .stamp-circle,
+.stamp-yellowBaby2 .stamp-circle,
+.stamp-yellowBaby3 .stamp-circle {
+  font-size: 0.95rem;
+}
+
+/* Observation code below stamp */
+.stamp-code {
+  font-size: 0.5625rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  max-width: 44px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* Day number above stamp */
+.stamp-day {
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+}
+
+/* Intercourse indicator */
+.stamp-intercourse {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #7B1FA2;
+  border: 1.5px solid var(--bg-card);
+  display: none;
+}
+
+.has-intercourse .stamp-intercourse {
+  display: block;
+}
+
+/* Large stamp for day detail view */
+.stamp-lg .stamp-circle {
+  width: 56px;
+  height: 56px;
+  font-size: 1.25rem;
+}
+
+.stamp-lg .stamp-baby-dot {
+  width: 16px;
+  height: 16px;
+}
+
+.stamp-lg .stamp-code {
+  font-size: 0.8125rem;
+  max-width: 80px;
+}

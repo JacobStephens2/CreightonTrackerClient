@@ -1,0 +1,316 @@
+/* Chart view styles */
+.chart-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px;
+  margin-top: 8px;
+  background: var(--surface-low);
+  border-radius: 28px;
+  /* Zoom variables — overridden by [data-zoom] for compact/trend modes */
+  --stamp-size: 36px;
+  --stamp-font: 0.75rem;
+  --cell-min: 46px;
+  --cell-pad-y: 8px;
+  --cell-pad-x: 4px;
+  --code-font: 0.5625rem;
+  --code-max: 44px;
+  --day-font: 0.625rem;
+  --label-num-font: 0.9rem;
+  --label-meta-font: 0.66rem;
+  --label-min: 82px;
+}
+
+.chart-container[data-zoom="compact"] {
+  --stamp-size: 26px;
+  --stamp-font: 0.625rem;
+  --cell-min: 32px;
+  --cell-pad-y: 5px;
+  --cell-pad-x: 2px;
+  --code-font: 0.5rem;
+  --code-max: 30px;
+  --day-font: 0.55rem;
+  --label-num-font: 0.78rem;
+  --label-meta-font: 0.58rem;
+  --label-min: 68px;
+}
+
+.chart-container[data-zoom="trend"] {
+  --stamp-size: 14px;
+  --stamp-font: 0.5rem;
+  --cell-min: 16px;
+  --cell-pad-y: 3px;
+  --cell-pad-x: 1px;
+  --label-num-font: 0.7rem;
+  --label-meta-font: 0.52rem;
+  --label-min: 54px;
+}
+
+/* In trend mode, hide per-stamp date label, observation code, and chick
+ * overlay so a row collapses to a tight ribbon of colored circles. */
+.chart-container[data-zoom="trend"] .stamp-day,
+.chart-container[data-zoom="trend"] .stamp-code {
+  display: none;
+}
+.chart-container[data-zoom="trend"] .stamp-circle::before {
+  display: none;
+}
+
+.chart-zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-low);
+}
+
+.chart-zoom-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.chart-zoom-btn.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.chart-table {
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  min-width: 100%;
+}
+
+.chart-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.chart-header th {
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--label-meta-font);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 10px var(--cell-pad-x);
+  text-align: center;
+  min-width: var(--cell-min);
+}
+
+.chart-header th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  min-width: var(--label-min);
+  border-radius: 18px 0 0 18px;
+  text-align: left;
+  padding-left: 14px;
+}
+
+.chart-header th:last-child {
+  border-radius: 0 18px 18px 0;
+}
+
+.cycle-row td {
+  padding: var(--cell-pad-y) var(--cell-pad-x);
+  text-align: center;
+  vertical-align: top;
+  min-width: var(--cell-min);
+  background: var(--bg-card);
+}
+
+.cycle-row td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  min-width: var(--label-min);
+  text-align: left;
+  padding-left: 14px;
+  border-radius: 20px 0 0 20px;
+  box-shadow: 8px 0 14px rgba(245, 243, 241, 0.95);
+}
+
+[data-theme="dark"] .cycle-row td:first-child {
+  box-shadow: 8px 0 14px rgba(39, 40, 38, 0.95);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .cycle-row td:first-child {
+    box-shadow: 8px 0 14px rgba(39, 40, 38, 0.95);
+  }
+}
+
+.cycle-row td:last-child {
+  border-radius: 0 20px 20px 0;
+}
+
+.cycle-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cycle-label-num {
+  font-family: var(--font-display);
+  font-size: var(--label-num-font);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cycle-label-date,
+.cycle-label-len {
+  font-size: var(--label-meta-font);
+  color: var(--text-secondary);
+}
+
+.chart-empty {
+  background: var(--surface-mid);
+}
+
+.chart-peak-col {
+  background: color-mix(in srgb, var(--secondary-soft) 45%, var(--bg-card));
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 0 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--surface-low);
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-dot-green { background: var(--stamp-green); }
+.legend-dot-red { background: var(--stamp-red); }
+.legend-dot-white {
+  background: var(--stamp-white);
+  box-shadow: inset 0 0 0 1px rgba(122, 123, 121, 0.28);
+}
+.legend-dot-yellow { background: var(--stamp-yellow); }
+
+.legend-dot-chick {
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.legend-dot-intercourse {
+  background: #7B1FA2;
+  border: 1.5px solid var(--bg-card);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.sample-banner {
+  margin-bottom: 10px;
+  padding: 18px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(123, 85, 86, 0.12), rgba(218, 248, 232, 0.65));
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  line-height: 1.55;
+}
+
+.sample-banner strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.sample-banner p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+/* Print styles — produce a clean printout / PDF of the chart */
+@media print {
+  /* Hide app chrome */
+  .header,
+  .bottom-nav,
+  .fab,
+  .sample-banner,
+  .disclaimer {
+    display: none !important;
+  }
+
+  /* Reset backgrounds for ink savings; keep stamp colors */
+  body,
+  .content,
+  .chart-container {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Allow the chart to overflow/wrap onto pages naturally */
+  .chart-container {
+    overflow: visible !important;
+    border-radius: 0 !important;
+  }
+
+  .chart-table {
+    border-spacing: 0 4px;
+    page-break-inside: auto;
+  }
+
+  .cycle-row {
+    page-break-inside: avoid;
+  }
+
+  .cycle-row td:first-child,
+  .chart-header th:first-child {
+    position: static !important;
+    box-shadow: none !important;
+  }
+
+  /* Force print-friendly stamp colors via the browser's color-adjust */
+  .stamp-circle,
+  .legend-dot,
+  .chart-peak-col,
+  .chart-empty {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Use landscape so all 35 columns fit */
+  @page {
+    size: landscape;
+    margin: 12mm;
+  }
+}

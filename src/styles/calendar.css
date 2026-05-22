@@ -1,0 +1,219 @@
+/* Calendar view styles */
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.calendar-nav h2 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.calendar-nav-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-card);
+  font-size: 1.5rem;
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.calendar-nav-btn:active {
+  transform: scale(0.96);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: 8px;
+  background: var(--surface-low);
+  border-radius: 30px;
+}
+
+@media (min-width: 768px) {
+  .calendar-grid {
+    gap: 8px;
+    padding: 14px;
+  }
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 4px 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px;
+  border: none;
+  background: var(--bg-card);
+  border-radius: 22px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  transition: transform 0.18s ease, background 0.18s ease;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.calendar-day:active {
+  transform: scale(0.97);
+}
+
+.calendar-day-num {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calendar-day.today {
+  background: var(--accent-ghost);
+  box-shadow: inset 0 0 0 1px rgba(123, 85, 86, 0.12);
+}
+
+.calendar-day.empty {
+  background: transparent;
+  cursor: default;
+  box-shadow: none;
+}
+
+.calendar-day.has-obs .calendar-day-num {
+  font-weight: 700;
+}
+
+.calendar-day.cycle-start::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 18px;
+  height: 4px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.calendar-stamp {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.52rem;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(49, 51, 49, 0.04);
+}
+
+.calendar-stamp-green { background: var(--stamp-green); color: white; }
+.calendar-stamp-red { background: var(--stamp-red); color: white; }
+.calendar-stamp-white {
+  background: var(--stamp-white);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px rgba(122, 123, 121, 0.2);
+}
+.calendar-stamp-yellow { background: var(--stamp-yellow); color: var(--text-primary); }
+
+.day-detail {
+  padding: 6px 0 0;
+}
+
+.day-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.day-detail-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  line-height: 1.05;
+}
+
+.day-detail-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.day-detail-nav button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: var(--bg-card);
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.day-detail-stamp {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  margin: 0 0 20px;
+  background: var(--surface-low);
+  border-radius: 28px;
+}
+
+.day-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.day-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border-radius: 22px;
+  font-size: 0.92rem;
+}
+
+.day-detail-row-label {
+  color: var(--text-secondary);
+}
+
+.day-detail-row-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+.day-detail-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.day-detail-actions .btn {
+  flex: 1;
+}

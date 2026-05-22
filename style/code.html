@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nurture - Your Living Journal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,700&amp;family=Be+Vietnam+Pro:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-variant": "#e3e3e0",
+              "error": "#aa371c",
+              "tertiary-container": "#f3e9de",
+              "surface-dim": "#dadad7",
+              "on-surface": "#313331",
+              "surface-container": "#efeeeb",
+              "primary-container": "#f7c5c5",
+              "on-tertiary-fixed-variant": "#666057",
+              "tertiary-dim": "#58524a",
+              "on-secondary": "#e5fff1",
+              "on-tertiary-container": "#5c564e",
+              "primary": "#7b5556",
+              "on-primary": "#fff7f6",
+              "surface-container-high": "#e9e8e6",
+              "secondary-fixed": "#daf8e8",
+              "surface-container-low": "#f5f3f1",
+              "primary-fixed-dim": "#e9b8b8",
+              "secondary": "#4b6559",
+              "inverse-surface": "#0d0e0e",
+              "secondary-dim": "#3f584d",
+              "outline-variant": "#b2b2b0",
+              "error-container": "#fa7150",
+              "inverse-primary": "#f7c5c5",
+              "primary-dim": "#6e494a",
+              "on-error-container": "#671200",
+              "on-secondary-container": "#466054",
+              "background": "#fbf9f7",
+              "secondary-fixed-dim": "#cce9da",
+              "on-primary-fixed": "#4b2b2c",
+              "on-tertiary-fixed": "#49443c",
+              "surface-bright": "#fbf9f7",
+              "on-tertiary": "#fff8f1",
+              "primary-fixed": "#f7c5c5",
+              "on-error": "#fff7f6",
+              "tertiary-fixed-dim": "#e5dbd1",
+              "inverse-on-surface": "#9d9d9b",
+              "error-dim": "#821a01",
+              "outline": "#7a7b79",
+              "surface-tint": "#7b5556",
+              "on-background": "#313331",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary-fixed-variant": "#506a5e",
+              "surface-container-highest": "#e3e3e0",
+              "tertiary-fixed": "#f3e9de",
+              "on-primary-fixed-variant": "#6b4747",
+              "on-primary-container": "#613e3f",
+              "surface": "#fbf9f7",
+              "on-surface-variant": "#5e5f5d",
+              "secondary-container": "#daf8e8",
+              "on-secondary-fixed": "#344d42",
+              "tertiary": "#645e56"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Be Vietnam Pro"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fbf9f7;
+            color: #313331;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .cycle-ring {
+            transform: rotate(-90deg);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#fbf9f7] dark:bg-stone-950 flex justify-between items-center px-6 py-4 w-full sticky top-0 z-40">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Close-up portrait of a woman with a gentle expression in soft natural morning light, minimalist aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC901zYgjKO2o_yzJxNRejKxHppNXegmITLFfze9jS9h9BcOPcacmosnc8OuWRIN6TIbq01iwOyLjUU-qVJE229YXCgC7oeDxk6B4hoI0UcimGBbp-VhKLgRItlAlelsG3NkZppnfaQx-MhCvlDFqjVWOnvHWYs8zmgq0IzEDq9Xp_gygo-HAzn3AwDJtJkkUx1iMKaQ95PJ7-gzXG_DWG61iyYt1LWRMQ3JAI8OsMs7dlob5pfRhWJAT15dTyNj2wOEZFKIfBtznY"/>
+</div>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-lg tracking-tight text-[#7b5556] dark:text-[#f7c5c5] italic">Nurture</span>
+</div>
+<button class="text-[#7b5556] dark:text-[#f7c5c5] hover:bg-[#f5f3f1] dark:hover:bg-stone-800 transition-colors p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="px-6 pt-4 max-w-2xl mx-auto space-y-8">
+<!-- Hero Section: The Living Journal Entry -->
+<section class="relative">
+<div class="space-y-1">
+<p class="font-label text-on-surface-variant text-sm tracking-wider uppercase">Today is February 14</p>
+<h1 class="font-headline text-4xl font-bold text-on-surface leading-tight">Good morning, Maya.</h1>
+</div>
+<!-- Cycle Visualization: Asymmetrical Layout -->
+<div class="mt-8 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+<div class="relative w-64 h-64 flex items-center justify-center">
+<!-- Subtle background circle -->
+<svg class="absolute w-full h-full cycle-ring" viewbox="0 0 100 100">
+<circle class="text-surface-container" cx="50" cy="50" fill="transparent" r="44" stroke="currentColor" stroke-width="8"></circle>
+<!-- Active segment -->
+<circle class="text-primary" cx="50" cy="50" fill="transparent" r="44" stroke="currentColor" stroke-dasharray="276" stroke-dashoffset="180" stroke-linecap="round" stroke-width="10"></circle>
+</svg>
+<div class="text-center z-10">
+<span class="block font-headline text-5xl font-extrabold text-primary tracking-tighter">12</span>
+<span class="block font-label font-semibold text-primary/80 text-sm">Cycle Day</span>
+</div>
+</div>
+<div class="flex-1 space-y-4 text-center md:text-left">
+<div class="bg-primary-container/30 rounded-lg p-5 border-none">
+<h2 class="font-headline text-2xl font-bold text-on-primary-container">High Fertility</h2>
+<p class="text-on-surface-variant text-sm mt-1 leading-relaxed">Your body is preparing for ovulation. It's a great time for mindful movement and connecting with your partner.</p>
+</div>
+<button class="w-full h-14 bg-primary text-on-primary rounded-full font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                        Log Symptoms
+                    </button>
+</div>
+</div>
+</section>
+<!-- Insights Bento Grid -->
+<section class="grid grid-cols-2 gap-4">
+<!-- Large Focus Card -->
+<div class="col-span-2 bg-secondary-container rounded-lg p-6 relative overflow-hidden flex flex-col justify-between min-h-[180px]">
+<div class="z-10">
+<span class="font-label text-xs font-bold text-on-secondary-container/60 uppercase tracking-widest">Next Phase</span>
+<h3 class="font-headline text-2xl font-bold text-on-secondary-container mt-1">Ovulation</h3>
+<p class="text-on-secondary-container/80 text-sm mt-2 max-w-[200px]">Expected in 2 days. You may notice an energy boost.</p>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-20">
+<span class="material-symbols-outlined text-[120px]" data-icon="spa">spa</span>
+</div>
+</div>
+<!-- Tiny Data Cards (The Islands) -->
+<div class="bg-surface-container-low rounded-lg p-5 flex flex-col justify-between">
+<span class="material-symbols-outlined text-secondary" data-icon="water_drop">water_drop</span>
+<div class="mt-4">
+<p class="text-on-surface-variant text-xs font-medium">Flow</p>
+<p class="font-headline text-lg font-bold text-on-surface">None</p>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-lg p-5 flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary" data-icon="device_thermostat">device_thermostat</span>
+<div class="mt-4">
+<p class="text-on-surface-variant text-xs font-medium">Basal Temp</p>
+<p class="font-headline text-lg font-bold text-on-surface">97.4°F</p>
+</div>
+</div>
+<!-- Sentiment Card -->
+<div class="col-span-2 bg-tertiary-container rounded-lg p-6 flex items-center gap-6">
+<div class="w-16 h-16 rounded-full bg-white/50 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary text-3xl" data-icon="sentiment_satisfied">sentiment_satisfied</span>
+</div>
+<div>
+<h4 class="font-headline text-lg font-bold text-on-tertiary-container">Mood: Peaceful</h4>
+<p class="text-on-tertiary-container/70 text-sm italic">"Feeling more centered today than yesterday."</p>
+</div>
+</div>
+</section>
+<!-- Tips / Editorial Content -->
+<section class="space-y-4">
+<h3 class="font-headline text-xl font-bold px-1">Nurture Notes</h3>
+<div class="relative rounded-lg overflow-hidden h-48 flex items-end p-6 group cursor-pointer">
+<img alt="Self care" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A cup of herbal tea next to a silk eye mask on white textured linen sheets, soft morning sunlight, peaceful mood" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9y85NgeIq0XAzvawcyLXZregUtU2T-wGEhrjB_nd7koxTHUWED4FDRMag3vgr2xuW03Pum6SYLWYM7Q9BuHZrc43BODUVFU78n3SpJmXrBw_8JYW7i2eii54qyu-zy2kqjxLQ1de1BBTeFZo0TFbExkMzEiH5z9rPaWPTyL-drRAyFnRbEEMxuHMPSVMoSPaYHZ_Ded-Ps3tNL88m67MS6uFc9wOee0mxNg2WQi-8OJ6fFtMA_F4wrzc3JE9D2AEogWG0REfauPw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="relative z-10 text-white">
+<p class="font-label text-xs font-medium opacity-80">Wellness Tip</p>
+<h4 class="font-headline text-lg font-bold">5 foods to boost luteal health</h4>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-8 pt-4 bg-[#ffffffcc] dark:bg-stone-900/80 backdrop-blur-xl rounded-t-[2rem] shadow-[0_-4px_20px_rgba(123,85,86,0.06)]">
+<!-- Cycle Tab (Active) -->
+<a class="flex flex-col items-center justify-center bg-[#f7c5c5] dark:bg-[#7b5556] text-[#7b5556] dark:text-[#f7c5c5] rounded-full px-5 py-1.5 transition-transform duration-300 scale-100" href="#">
+<span class="material-symbols-outlined" data-icon="radio_button_checked" style="font-variation-settings: 'FILL' 1;">radio_button_checked</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide mt-0.5">Cycle</span>
+</a>
+<!-- Calendar Tab -->
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 px-5 py-1.5 hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide mt-0.5">Calendar</span>
+</a>
+<!-- Insights Tab -->
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 px-5 py-1.5 hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide mt-0.5">Insights</span>
+</a>
+<!-- Community Tab -->
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 px-5 py-1.5 hover:opacity-80 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-['Be_Vietnam_Pro'] text-[11px] font-medium tracking-wide mt-0.5">Community</span>
+</a>
+</nav>
+<!-- Contextual FAB -->
+<div class="fixed bottom-24 right-6 z-40">
+<button class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+</div>
+</body></html>

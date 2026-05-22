@@ -1,0 +1,15 @@
+node_modules
+dist
+
+# Android / Capacitor wrapper
+android/*.jks
+android/*.apk
+android/*.aab
+android/.gradle/
+android/**/build/
+android/local.properties
+android/signing.properties
+android/app/src/main/assets/public/
+
+# Local working files
+AGENT_SCRATCH.md

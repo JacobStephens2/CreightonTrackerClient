@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.creighton.tracker",
+      "sha256_cert_fingerprints": [
+        "E7:96:FF:42:94:67:C0:6E:BD:08:64:6E:B2:09:DB:0D:71:13:3A:B2:0D:40:C6:8A:56:99:ED:3D:AA:6B:FC:A8"
+      ]
+    }
+  }
+]

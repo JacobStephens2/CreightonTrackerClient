@@ -1,0 +1,246 @@
+/* Observation form styles */
+.obs-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.obs-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.obs-form-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.obs-form-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.obs-form-nav {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--surface-mid);
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.obs-form-nav:active {
+  transform: scale(0.96);
+}
+
+.obs-form-nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.obs-form-close {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: var(--surface-mid);
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.obs-form-close:active {
+  transform: scale(0.96);
+}
+
+/* Date display */
+.obs-form-date {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+/* Preview area */
+.obs-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  /* Layer the accent gradient over a solid surface color so the preview
+   * stays fully opaque while sticky (form content scrolls under it). */
+  background:
+    linear-gradient(135deg, rgba(123, 85, 86, 0.1), rgba(218, 248, 232, 0.5)),
+    var(--surface);
+  border-radius: 28px;
+  margin-bottom: 10px;
+  /* Pin the preview to the top of the scrolling modal so the live stamp
+   * stays visible while the user scrolls through the form. */
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.obs-preview-code {
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.obs-preview-date {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  flex-shrink: 0;
+}
+
+/* Toggle group within form */
+.obs-form .toggle-group {
+  margin-bottom: 4px;
+}
+
+/* Color hint backgrounds for toggle buttons */
+.toggle-hint-red {
+  background: rgba(200, 111, 102, 0.15);
+}
+
+.toggle-hint-red.active {
+  background: var(--stamp-red);
+}
+
+.toggle-hint-green {
+  background: rgba(79, 123, 99, 0.15);
+}
+
+.toggle-hint-green.active {
+  background: var(--stamp-green);
+}
+
+.toggle-hint-white {
+  background: rgba(255, 253, 251, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(122, 123, 121, 0.15);
+}
+
+.toggle-hint-white.active {
+  background: var(--stamp-white);
+  /* Stamp-white is light in both themes, so the digit/label needs a fixed
+   * dark color — previously this used var(--surface) which flips to a light
+   * cream in light mode and made the label invisible. */
+  color: #1e1f1d;
+  box-shadow: inset 0 0 0 1px rgba(122, 123, 121, 0.3);
+}
+
+/* Intercourse toggle */
+.intercourse-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface-low);
+  border-radius: 22px;
+}
+
+.intercourse-toggle label {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+/* Checkbox styled as toggle switch */
+.switch {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(122, 123, 121, 0.28);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.switch-slider::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.switch input:checked + .switch-slider {
+  background: var(--accent);
+}
+
+.switch input:checked + .switch-slider::before {
+  transform: translateX(20px);
+}
+
+/* Form actions */
+.obs-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 8px;
+}
+
+.obs-form-actions .btn {
+  flex: 1;
+}
+
+/* Notes */
+.obs-form textarea {
+  margin-top: 4px;
+}
+
+/* Peak day manual toggle */
+.peak-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface-low);
+  border-radius: 22px;
+}
+
+.peak-toggle-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.peak-toggle-label span:first-child {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.peak-toggle-label span:last-child {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}

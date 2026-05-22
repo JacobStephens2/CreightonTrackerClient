@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /shared/
+
+Sitemap: https://creighton.stephens.page/sitemap.xml
