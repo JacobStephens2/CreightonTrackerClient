@@ -40,7 +40,7 @@ async function main(): Promise<void> {
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `
       <div class="modal-content" style="padding:28px 22px calc(28px + env(safe-area-inset-bottom, 0px))">
-        <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;margin-bottom:14px">Welcome to Creighton Tracker</h2>
+        <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;margin-bottom:14px">Welcome to Chart35</h2>
         <p style="font-size:0.9rem;line-height:1.6;color:var(--text-secondary);margin-bottom:14px">
           This app is a personal charting tool and is not a substitute for instruction from a certified FertilityCare Practitioner.
           The Creighton Model FertilityCare\u2122 System should be learned through proper instruction.

@@ -34,7 +34,7 @@ export function initAppShell(): void {
     <button type="button" class="header-brand" aria-label="Go to chart">
       <div class="header-mark">${ICON_LOGO}</div>
       <div class="header-copy">
-        <h1>Creighton Tracker</h1>
+        <h1>Chart35</h1>
       </div>
     </button>
   `;

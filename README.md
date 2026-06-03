@@ -1,6 +1,6 @@
-# Creighton Tracker — Web Client
+# Chart35 — Web Client
 
-The public client codebase for [creightontracker.com](https://creightontracker.com), a privacy-focused fertility-cycle charting app for the Creighton Model FertilityCare™ System (CrMS).
+The public client codebase for [chart35.com](https://chart35.com), a privacy-focused fertility-cycle charting app for the Creighton Model FertilityCare™ System (CrMS).
 
 This repository contains the **web/PWA client and the Capacitor Android wrapper**. The server-side sync and account API is intentionally kept in a private repository — see [Architecture](#architecture) below.
 
@@ -29,7 +29,7 @@ This repository contains:
 
 - **`src/`** — the TypeScript SPA (Vite + Dexie.js IndexedDB + Web Crypto API).
 - **`public/`** — static assets including the privacy policy, support, and acknowledgments pages.
-- **`android/`** — the Capacitor Android wrapper. Loads `https://creightontracker.com` in a native WebView.
+- **`android/`** — the Capacitor Android wrapper. Loads `https://chart35.com` in a native WebView.
 - **`scripts/`** — dev utilities (e.g., headless screenshot capture).
 - **`index.html`**, **`shared.html`** — SPA entry + read-only shared-chart entry.
 - **`capacitor.config.ts`**, **`vite.config.ts`**, **`tsconfig.json`**, **`eslint.config.js`** — toolchain config.
@@ -73,7 +73,7 @@ Signing config is read from an uncommitted `android/signing.properties` (see `an
 
 ## Privacy
 
-See [`creightontracker.com/privacy`](https://creightontracker.com/privacy) for the full policy. Short version: observations live on your device by default, and if you choose to sync they're end-to-end encrypted before they ever leave the device. The server can never read your health data; the in-app **Delete Account** button removes everything (server-side row, encrypted blobs, share-link tokens, on-device cache) in a single transaction.
+See [`chart35.com/privacy`](https://chart35.com/privacy) for the full policy. Short version: observations live on your device by default, and if you choose to sync they're end-to-end encrypted before they ever leave the device. The server can never read your health data; the in-app **Delete Account** button removes everything (server-side row, encrypted blobs, share-link tokens, on-device cache) in a single transaction.
 
 ## License
 
@@ -81,11 +81,11 @@ See [`creightontracker.com/privacy`](https://creightontracker.com/privacy) for t
 
 The AGPL choice is deliberate: if you modify this codebase and run it as a network service, you must publish your modifications under the same license. This preserves the auditability of any deployed version of the app while preventing closed-source SaaS clones of the work.
 
-The name "Creighton Cycle Tracker" / "Creighton Tracker" and the visual branding are reserved. The Creighton Model FertilityCare™ System is a trademark of FertilityCare Centers of America, used here descriptively only. This app is an independent project and is not affiliated with, endorsed by, or sponsored by FertilityCare Centers of America, Creighton University, or the Saint Paul VI Institute.
+The name "Chart35" / "Chart35" and the visual branding are reserved. The Creighton Model FertilityCare™ System is a trademark of FertilityCare Centers of America, used here descriptively only. This app is an independent project and is not affiliated with, endorsed by, or sponsored by FertilityCare Centers of America, Creighton University, or the Saint Paul VI Institute.
 
 ## Acknowledgments
 
-The CrMS clinical instruction that informs every feature in this app traces back to a real FertilityCare Practitioner. See [creightontracker.com/acknowledgments](https://creightontracker.com/acknowledgments).
+The CrMS clinical instruction that informs every feature in this app traces back to a real FertilityCare Practitioner. See [chart35.com/acknowledgments](https://chart35.com/acknowledgments).
 
 The codes and rules implemented here are sourced from *[The Creighton Model FertilityCare™ System: An Authentic Language of a Woman's Health and Fertility](https://openlibrary.org/isbn/9780962648540)*, Thomas W. Hilgers, M.D. (Pope Paul VI Institute Press; ISBN 978-0-9626485-4-0). It is the authoritative reference for CrMS and is highly recommended for anyone learning the method.
 

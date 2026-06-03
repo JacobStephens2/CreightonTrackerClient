@@ -11,7 +11,7 @@ export function renderPrivacyPolicyView(container: HTMLElement): void {
 
     <div class="section-label" style="margin-top:0">Overview</div>
     <p style="font-size:0.875rem;margin-bottom:16px">
-      Creighton Cycle Tracker ("the App") is built by Jacob Stephens. This policy explains what data the App collects, how it is stored, and how it is used. Your privacy is important — the App is designed to keep your health data under your control.
+      Chart35 ("the App") is built by Jacob Stephens. This policy explains what data the App collects, how it is stored, and how it is used. Your privacy is important — the App is designed to keep your health data under your control.
     </p>
 
     <div class="section-label">Data Stored on Your Device</div>

@@ -701,7 +701,7 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
   // Version
   const version = document.createElement('p');
   version.style.cssText = 'text-align:center;font-size:0.75rem;color:var(--text-secondary);margin-top:8px';
-  version.textContent = `Creighton Cycle Tracker v${__APP_VERSION__}`;
+  version.textContent = `Chart35 v${__APP_VERSION__}`;
   wrapper.appendChild(version);
 
   container.appendChild(wrapper);

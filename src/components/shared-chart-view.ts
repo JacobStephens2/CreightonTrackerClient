@@ -251,7 +251,7 @@ export function renderSharedChartView(container: HTMLElement, data: SharedData):
   // Link to main site
   const link = document.createElement('p');
   link.style.cssText = 'text-align:center;margin-top:16px';
-  link.innerHTML = '<a href="https://creightontracker.com/" style="color:var(--primary);font-size:0.875rem">Start tracking with Creighton Tracker</a>';
+  link.innerHTML = '<a href="https://chart35.com/" style="color:var(--primary);font-size:0.875rem">Start tracking with Chart35</a>';
   content.appendChild(link);
 
   container.appendChild(content);

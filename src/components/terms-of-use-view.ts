@@ -11,7 +11,7 @@ export function renderTermsOfUseView(container: HTMLElement): void {
 
     <div class="section-label" style="margin-top:0">Acceptance of Terms</div>
     <p style="font-size:0.875rem;margin-bottom:16px">
-      By accessing or using Creighton Cycle Tracker ("the App"), you agree to these Terms of Use. If you do not agree, please do not use the App.
+      By accessing or using Chart35 ("the App"), you agree to these Terms of Use. If you do not agree, please do not use the App.
     </p>
 
     <div class="section-label">Description of Service</div>

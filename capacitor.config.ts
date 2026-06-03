@@ -2,10 +2,10 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.creighton.tracker',
-  appName: 'Creighton Cycle Tracker',
+  appName: 'Chart35',
   webDir: 'dist',
   server: {
-    url: 'https://creightontracker.com',
+    url: 'https://chart35.com',
     androidScheme: 'https',
   },
 };

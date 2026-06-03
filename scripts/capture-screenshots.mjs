@@ -6,7 +6,7 @@ import path from 'path';
 const OUT_DIR = process.env.SCREENSHOT_DIR
   || '/var/www/creighton.stephens.page/play-store-package/screenshots';
 const VIEWPORT = { width: 1080, height: 1920, deviceScaleFactor: 1 };
-const BASE = 'https://creightontracker.com';
+const BASE = 'https://chart35.com';
 
 async function wait(ms) {
   return new Promise(r => setTimeout(r, ms));

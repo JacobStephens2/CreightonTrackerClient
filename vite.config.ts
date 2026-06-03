@@ -35,8 +35,8 @@ export default defineConfig({
         clientsClaim: true,
       },
       manifest: {
-        name: 'Creighton Cycle Tracker',
-        short_name: 'CrMS Tracker',
+        name: 'Chart35 — Creighton Model (CrMS) Charting',
+        short_name: 'Chart35',
         description: 'Free Creighton Model (CrMS) fertility cycle tracker. Chart observations, track mucus patterns, identify peak days, and share with your FertilityCare Practitioner.',
         categories: ['health', 'medical', 'lifestyle'],
         theme_color: '#4CAF50',
