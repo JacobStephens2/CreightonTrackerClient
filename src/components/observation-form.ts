@@ -1,6 +1,6 @@
 import type { Observation, BleedingCode, MucusStretchCode, MucusCharacteristic, FrequencyCode } from '../db/models';
 import { BLEEDING_LABELS, MUCUS_STRETCH_LABELS, MUCUS_CHAR_LABELS, FREQUENCY_LABELS, buildObservationCode } from '../utils/creighton-codes';
-import { displayDate, dayOfWeek } from '../utils/date-utils';
+import { displayDate, dayOfWeek, addDays } from '../utils/date-utils';
 import { determineStamp } from '../utils/stamp-logic';
 import { renderStamp } from './stamp';
 import { observationService } from '../services/observation-service';
@@ -20,10 +20,20 @@ interface FormState {
   notes: string;
 }
 
+/** When provided, the form operates on an in-memory sample dataset instead of
+ *  the real IndexedDB store — used by the sample chart so demo edits never
+ *  touch the user's own data. */
+export interface SampleMode {
+  observations: Observation[];
+  onSave: (obs: Observation) => void;
+  onDelete: (date: string) => void;
+}
+
 export function showObservationForm(
   date: string,
   existing?: Observation,
-  onSave?: () => void
+  onSave?: () => void,
+  sampleMode?: SampleMode
 ): void {
   let current: Observation | undefined = existing;
   const state: FormState = {
@@ -42,6 +52,7 @@ export function showObservationForm(
 
   let stampContext: { peakDay?: string; postPeakCount?: number; inFertileWindow?: boolean; pastPostPeakWindow?: boolean } = {};
   let neighbors: { prev?: string; next?: string } = {};
+  let yesterdayObs: Observation | undefined;
 
   // Create modal overlay
   const overlay = document.createElement('div');
@@ -55,6 +66,20 @@ export function showObservationForm(
 
   function render() {
     modal.innerHTML = '';
+
+    // Heavy/Moderate flow obscures any mucus observation, so on those days
+    // only the bleeding letter is recorded (per CrMS: "always record the
+    // presence or absence of mucus during the LIGHT and VERY LIGHT days").
+    // Hide the mucus-related sections when H or M is selected, and treat the
+    // mucus fields as not-observed for the preview, code, and saved record.
+    const mucusObscured = state.bleeding === 'H' || state.bleeding === 'M';
+    const effStretch = mucusObscured ? undefined : state.mucusStretch;
+    const effChars = !mucusObscured && state.mucusCharacteristics.length > 0
+      ? state.mucusCharacteristics
+      : undefined;
+    const effFrequency = mucusObscured ? undefined : state.frequency;
+    const effPeak = mucusObscured ? false : state.isPeakDay;
+    const effOverride: 'yellow' | undefined = !mucusObscured && state.isBIP ? 'yellow' : undefined;
 
     // Header
     const header = document.createElement('div');
@@ -118,6 +143,7 @@ export function showObservationForm(
       dateInput.addEventListener('change', () => {
         state.date = dateInput.value;
         refreshStampContext();
+        refreshYesterday();
       });
       dateEl.appendChild(dateLbl);
     }
@@ -136,20 +162,20 @@ export function showObservationForm(
       date: state.date,
       bleeding: state.bleeding,
       brown: state.brown || undefined,
-      mucusStretch: state.mucusStretch,
-      mucusCharacteristics: state.mucusCharacteristics.length > 0 ? state.mucusCharacteristics : undefined,
-      frequency: state.frequency,
-      isPeakDay: state.isPeakDay,
+      mucusStretch: effStretch,
+      mucusCharacteristics: effChars,
+      frequency: effFrequency,
+      isPeakDay: effPeak,
       intercourse: state.intercourse,
-      stampOverride: state.isBIP ? 'yellow' : undefined,
+      stampOverride: effOverride,
       stamp: determineStamp({
         date: state.date,
         bleeding: state.bleeding,
         brown: state.brown || undefined,
-        mucusStretch: state.mucusStretch,
-        mucusCharacteristics: state.mucusCharacteristics.length > 0 ? state.mucusCharacteristics : undefined,
-        isPeakDay: state.isPeakDay,
-        stampOverride: state.isBIP ? 'yellow' : undefined,
+        mucusStretch: effStretch,
+        mucusCharacteristics: effChars,
+        isPeakDay: effPeak,
+        stampOverride: effOverride,
       }, stampContext),
     };
     preview.appendChild(renderStamp(previewObs, { large: true, showCode: false }));
@@ -157,9 +183,9 @@ export function showObservationForm(
     codeEl.className = 'obs-preview-code';
     codeEl.textContent = buildObservationCode(
       state.bleeding,
-      state.mucusStretch,
-      state.mucusCharacteristics.length > 0 ? state.mucusCharacteristics : undefined,
-      state.frequency,
+      effStretch,
+      effChars,
+      effFrequency,
       state.brown
     );
     preview.appendChild(codeEl);
@@ -198,99 +224,108 @@ export function showObservationForm(
     brownSection.appendChild(brownLabel);
     form.appendChild(brownSection);
 
-    // Vulvar observation (non-mucus: 0, 2, 2W, 4)
-    form.appendChild(sectionLabel('Vulvar Observation (Non-Mucus)'));
-    const nonMucusCodes: MucusStretchCode[] = ['0', '2', '2W', '4'];
-    form.appendChild(
-      toggleGroup(
-        nonMucusCodes.map((code) => ({
-          value: code,
-          label: `${code} - ${MUCUS_STRETCH_LABELS[code]}`,
-          active: state.mucusStretch === code,
-          colorHint: 'green',
-        })),
-        (val) => {
-          state.mucusStretch = state.mucusStretch === val ? undefined : (val as MucusStretchCode);
-          render();
-        },
-        true
-      )
-    );
-
-    // Mucus observation (6, 8, 10, 10DL, 10SL, 10WL)
-    form.appendChild(sectionLabel('Cervical Mucus'));
-    const mucusCodes: MucusStretchCode[] = ['6', '8', '10', '10DL', '10SL', '10WL'];
-    form.appendChild(
-      toggleGroup(
-        mucusCodes.map((code) => ({
-          value: code,
-          label: `${code} - ${MUCUS_STRETCH_LABELS[code]}`,
-          active: state.mucusStretch === code,
-          colorHint: 'white',
-        })),
-        (val) => {
-          state.mucusStretch = state.mucusStretch === val ? undefined : (val as MucusStretchCode);
-          render();
-        },
-        true
-      )
-    );
-
-    // Mucus characteristics (only if actual mucus: 6, 8, 10, 10DL, 10SL, 10WL)
-    const actualMucusCodes = new Set(['6', '8', '10', '10DL', '10SL', '10WL']);
-    if (state.mucusStretch && actualMucusCodes.has(state.mucusStretch)) {
-      form.appendChild(sectionLabel('Mucus Characteristics'));
+    if (mucusObscured) {
+      // Heavy/Moderate flow: mucus can't be assessed — show a short note in
+      // place of the mucus sections.
+      const note = document.createElement('p');
+      note.className = 'obs-flow-note';
+      note.textContent = 'On heavy and moderate flow days, only the bleeding is recorded — mucus can’t be assessed through the flow.';
+      form.appendChild(note);
+    } else {
+      // Vulvar observation (non-mucus: 0, 2, 2W, 4)
+      form.appendChild(sectionLabel('Vulvar Observation (Non-Mucus)'));
+      const nonMucusCodes: MucusStretchCode[] = ['0', '2', '2W', '4'];
       form.appendChild(
         toggleGroup(
-          Object.entries(MUCUS_CHAR_LABELS).map(([code, label]) => ({
+          nonMucusCodes.map((code) => ({
             value: code,
-            label: `${code} - ${label}`,
-            active: state.mucusCharacteristics.includes(code as MucusCharacteristic),
+            label: `${code} - ${MUCUS_STRETCH_LABELS[code]}`,
+            active: state.mucusStretch === code,
+            colorHint: 'green',
           })),
           (val) => {
-            const char = val as MucusCharacteristic;
-            const idx = state.mucusCharacteristics.indexOf(char);
-            if (idx >= 0) {
-              state.mucusCharacteristics.splice(idx, 1);
-            } else {
-              state.mucusCharacteristics.push(char);
-            }
+            state.mucusStretch = state.mucusStretch === val ? undefined : (val as MucusStretchCode);
             render();
           },
-          false // multi-select
+          true
         )
       );
+
+      // Mucus observation (6, 8, 10, 10DL, 10SL, 10WL)
+      form.appendChild(sectionLabel('Cervical Mucus'));
+      const mucusCodes: MucusStretchCode[] = ['6', '8', '10', '10DL', '10SL', '10WL'];
+      form.appendChild(
+        toggleGroup(
+          mucusCodes.map((code) => ({
+            value: code,
+            label: `${code} - ${MUCUS_STRETCH_LABELS[code]}`,
+            active: state.mucusStretch === code,
+            colorHint: 'white',
+          })),
+          (val) => {
+            state.mucusStretch = state.mucusStretch === val ? undefined : (val as MucusStretchCode);
+            render();
+          },
+          true
+        )
+      );
+
+      // Mucus characteristics (only if actual mucus: 6, 8, 10, 10DL, 10SL, 10WL)
+      const actualMucusCodes = new Set(['6', '8', '10', '10DL', '10SL', '10WL']);
+      if (state.mucusStretch && actualMucusCodes.has(state.mucusStretch)) {
+        form.appendChild(sectionLabel('Mucus Characteristics'));
+        form.appendChild(
+          toggleGroup(
+            Object.entries(MUCUS_CHAR_LABELS).map(([code, label]) => ({
+              value: code,
+              label: `${code} - ${label}`,
+              active: state.mucusCharacteristics.includes(code as MucusCharacteristic),
+            })),
+            (val) => {
+              const char = val as MucusCharacteristic;
+              const idx = state.mucusCharacteristics.indexOf(char);
+              if (idx >= 0) {
+                state.mucusCharacteristics.splice(idx, 1);
+              } else {
+                state.mucusCharacteristics.push(char);
+              }
+              render();
+            },
+            false // multi-select
+          )
+        );
+      }
+
+      // Frequency
+      form.appendChild(sectionLabel('Frequency'));
+      form.appendChild(
+        toggleGroup(
+          Object.entries(FREQUENCY_LABELS).map(([code, label]) => ({
+            value: code,
+            label,
+            active: state.frequency === code,
+          })),
+          (val) => {
+            state.frequency = state.frequency === val ? undefined : (val as FrequencyCode);
+            render();
+          },
+          true
+        )
+      );
+
+      // Peak day toggle
+      const peakSection = document.createElement('div');
+      peakSection.className = 'peak-toggle';
+      const peakLabel = document.createElement('div');
+      peakLabel.className = 'peak-toggle-label';
+      peakLabel.innerHTML = '<span>Peak Day</span><span>Mark as the last day of peak-type mucus</span>';
+      peakSection.appendChild(peakLabel);
+      peakSection.appendChild(createSwitch(state.isPeakDay, (v) => {
+        state.isPeakDay = v;
+        render();
+      }));
+      form.appendChild(peakSection);
     }
-
-    // Frequency
-    form.appendChild(sectionLabel('Frequency'));
-    form.appendChild(
-      toggleGroup(
-        Object.entries(FREQUENCY_LABELS).map(([code, label]) => ({
-          value: code,
-          label,
-          active: state.frequency === code,
-        })),
-        (val) => {
-          state.frequency = state.frequency === val ? undefined : (val as FrequencyCode);
-          render();
-        },
-        true
-      )
-    );
-
-    // Peak day toggle
-    const peakSection = document.createElement('div');
-    peakSection.className = 'peak-toggle';
-    const peakLabel = document.createElement('div');
-    peakLabel.className = 'peak-toggle-label';
-    peakLabel.innerHTML = '<span>Peak Day</span><span>Mark as the last day of peak-type mucus</span>';
-    peakSection.appendChild(peakLabel);
-    peakSection.appendChild(createSwitch(state.isPeakDay, (v) => {
-      state.isPeakDay = v;
-      render();
-    }));
-    form.appendChild(peakSection);
 
     // Cycle start toggle
     const cycleStartSection = document.createElement('div');
@@ -305,18 +340,53 @@ export function showObservationForm(
     }));
     form.appendChild(cycleStartSection);
 
-    // Infertile pattern / Base Infertile Pattern toggle (yellow stamp)
-    const bipSection = document.createElement('div');
-    bipSection.className = 'peak-toggle';
-    const bipLabel = document.createElement('div');
-    bipLabel.className = 'peak-toggle-label';
-    bipLabel.innerHTML = '<span>Infertile pattern</span><span>Mark with a yellow stamp</span>';
-    bipSection.appendChild(bipLabel);
-    bipSection.appendChild(createSwitch(state.isBIP, (v) => {
-      state.isBIP = v;
-      render();
-    }));
-    form.appendChild(bipSection);
+    if (!mucusObscured) {
+      // Infertile pattern / Base Infertile Pattern toggle (yellow stamp)
+      const bipSection = document.createElement('div');
+      bipSection.className = 'peak-toggle';
+      const bipLabel = document.createElement('div');
+      bipLabel.className = 'peak-toggle-label';
+      bipLabel.innerHTML = '<span>Infertile pattern</span><span>If using yellow stamps, is today essentially the same as yesterday? If yes, mark yellow. Otherwise you may have reached a point of change.</span>';
+      bipSection.appendChild(bipLabel);
+      bipSection.appendChild(createSwitch(state.isBIP, (v) => {
+        state.isBIP = v;
+        render();
+      }));
+      form.appendChild(bipSection);
+
+      // Essential Sameness ribbon — sits right under the Infertile pattern
+      // toggle (the decision point) so the user can compare today to yesterday
+      // when deciding whether to apply a yellow stamp.
+      const esq = document.createElement('div');
+      esq.className = 'obs-esq';
+      const esqLabel = document.createElement('span');
+      esqLabel.className = 'obs-esq-label';
+      esqLabel.textContent = 'Yesterday';
+      esq.appendChild(esqLabel);
+      if (yesterdayObs) {
+        esq.appendChild(renderStamp(yesterdayObs, { showCode: false }));
+        const yCode = document.createElement('span');
+        yCode.className = 'obs-esq-code';
+        yCode.textContent = buildObservationCode(
+          yesterdayObs.bleeding,
+          yesterdayObs.mucusStretch,
+          yesterdayObs.mucusCharacteristics,
+          yesterdayObs.frequency,
+          yesterdayObs.brown
+        );
+        esq.appendChild(yCode);
+      } else {
+        const none = document.createElement('span');
+        none.className = 'obs-esq-code';
+        none.textContent = 'No observation recorded';
+        esq.appendChild(none);
+      }
+      const esqQ = document.createElement('span');
+      esqQ.className = 'obs-esq-q';
+      esqQ.textContent = 'Essentially the same today?';
+      esq.appendChild(esqQ);
+      form.appendChild(esq);
+    }
 
     // Intercourse toggle
     const icSection = document.createElement('div');
@@ -349,7 +419,11 @@ export function showObservationForm(
       deleteBtn.className = 'btn btn-danger';
       deleteBtn.textContent = 'Delete';
       deleteBtn.addEventListener('click', async () => {
-        await observationService.delete(state.date);
+        if (sampleMode) {
+          sampleMode.onDelete(state.date);
+        } else {
+          await observationService.delete(state.date);
+        }
         overlay.remove();
         onSave?.();
       });
@@ -360,16 +434,16 @@ export function showObservationForm(
     saveBtn.className = 'btn btn-primary';
     saveBtn.textContent = 'Save';
     saveBtn.addEventListener('click', async () => {
-      const stampOverride = state.isBIP ? ('yellow' as const) : undefined;
+      const stampOverride = effOverride;
       const obs: Observation = {
         ...(current ?? {}),
         date: state.date,
         bleeding: state.bleeding,
         brown: state.brown || undefined,
-        mucusStretch: state.mucusStretch,
-        mucusCharacteristics: state.mucusCharacteristics.length > 0 ? state.mucusCharacteristics : undefined,
-        frequency: state.frequency,
-        isPeakDay: state.isPeakDay,
+        mucusStretch: effStretch,
+        mucusCharacteristics: effChars,
+        frequency: effFrequency,
+        isPeakDay: effPeak,
         isCycleStart: state.isCycleStart || undefined,
         stampOverride,
         intercourse: state.intercourse,
@@ -378,14 +452,18 @@ export function showObservationForm(
           date: state.date,
           bleeding: state.bleeding,
           brown: state.brown || undefined,
-          mucusStretch: state.mucusStretch,
-          mucusCharacteristics: state.mucusCharacteristics.length > 0 ? state.mucusCharacteristics : undefined,
-          isPeakDay: state.isPeakDay,
+          mucusStretch: effStretch,
+          mucusCharacteristics: effChars,
+          isPeakDay: effPeak,
           stampOverride,
         }),
       };
 
-      await observationService.save(obs);
+      if (sampleMode) {
+        sampleMode.onSave(obs);
+      } else {
+        await observationService.save(obs);
+      }
       overlay.remove();
       onSave?.();
     });
@@ -400,8 +478,18 @@ export function showObservationForm(
     render();
   }
 
+  async function refreshYesterday() {
+    const prevDate = addDays(state.date, -1);
+    yesterdayObs = sampleMode
+      ? sampleMode.observations.find(o => o.date === prevDate)
+      : await observationService.getByDate(prevDate);
+    render();
+  }
+
   async function refreshNeighbors() {
-    const all = await observationService.getAll();
+    const all = sampleMode
+      ? [...sampleMode.observations].sort((a, b) => a.date.localeCompare(b.date))
+      : await observationService.getAll();
     const idx = all.findIndex(o => o.date === state.date);
     if (idx < 0) {
       neighbors = {};
@@ -415,7 +503,9 @@ export function showObservationForm(
   }
 
   async function loadObservation(date: string) {
-    const obs = await observationService.getByDate(date);
+    const obs = sampleMode
+      ? sampleMode.observations.find(o => o.date === date)
+      : await observationService.getByDate(date);
     if (!obs) return;
     current = obs;
     state.date = obs.date;
@@ -433,10 +523,12 @@ export function showObservationForm(
     render();
     refreshStampContext();
     refreshNeighbors();
+    refreshYesterday();
   }
 
   render();
   refreshStampContext();
+  refreshYesterday();
   if (current) refreshNeighbors();
 
   overlay.appendChild(modal);

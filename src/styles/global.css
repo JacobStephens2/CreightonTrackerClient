@@ -638,3 +638,133 @@ textarea {
     transform: translateX(-50%);
   }
 }
+
+/* Mobile landscape: reclaim vertical space for the chart by hiding the
+ * top brand bar and slimming the bottom nav. Targets short viewports
+ * (phones held sideways) without affecting tablets, which are taller. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .header {
+    display: none;
+  }
+
+  .content {
+    padding-top: 6px;
+    padding-bottom: calc(var(--nav-height) + 20px);
+  }
+
+  .bottom-nav {
+    bottom: 6px;
+    min-height: 0;
+    padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .bottom-nav .nav-item {
+    min-height: 38px;
+  }
+}
+
+/* App-wide "you're signed out" reminder banner */
+.auth-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: #FFF3E0;
+  color: #E65100;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid rgba(230, 81, 0, 0.2);
+}
+
+.auth-banner-text {
+  flex: 1;
+  min-width: 150px;
+  line-height: 1.4;
+}
+
+.auth-banner-action {
+  flex: none;
+  background: #E65100;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.auth-banner-secondary {
+  flex: none;
+  background: transparent;
+  color: #E65100;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.auth-banner-secondary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.auth-banner-dismiss {
+  flex: none;
+  background: none;
+  border: none;
+  color: #E65100;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+/* Header account indicator (which account you're signed into) */
+.header-account {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 48%;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* display:flex above would otherwise defeat the `hidden` attribute. */
+.header-account[hidden] {
+  display: none;
+}
+
+.header-account:active {
+  transform: scale(0.97);
+}
+
+.header-account-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+}
+
+.header-account-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

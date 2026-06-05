@@ -1,8 +1,28 @@
 import { renderStamp } from './stamp';
-import { addDays, displayDate, daysBetween } from '../utils/date-utils';
+import { addDays, displayDate, daysBetween, dayOfWeek } from '../utils/date-utils';
+import {
+  BLEEDING_LABELS,
+  MUCUS_STRETCH_LABELS,
+  MUCUS_CHAR_LABELS,
+  FREQUENCY_LABELS,
+  buildObservationCode,
+} from '../utils/creighton-codes';
 import type { Observation, Cycle } from '../db/models';
 
 const MIN_CHART_COLUMNS = 35;
+
+type ChartZoom = 'normal' | 'compact' | 'trend';
+const ZOOM_KEY = 'chartZoom';
+
+function getSavedZoom(): ChartZoom {
+  const v = localStorage.getItem(ZOOM_KEY);
+  return v === 'compact' || v === 'trend' ? v : 'normal';
+}
+
+function saveZoom(z: ChartZoom): void {
+  if (z === 'normal') localStorage.removeItem(ZOOM_KEY);
+  else localStorage.setItem(ZOOM_KEY, z);
+}
 
 interface SharedData {
   firstName?: string;
@@ -12,6 +32,8 @@ interface SharedData {
 }
 
 export function renderSharedChartView(container: HTMLElement, data: SharedData): void {
+  container.innerHTML = '';
+
   // Header
   const header = document.createElement('header');
   header.className = 'header';
@@ -75,11 +97,14 @@ export function renderSharedChartView(container: HTMLElement, data: SharedData):
         popup.className = 'bip-popup card';
         popup.style.cssText = 'margin-top:8px;padding:12px;font-size:0.8125rem;line-height:1.5';
         popup.innerHTML = `
-          <strong>Infertile pattern</strong>
+          <strong>Infertile pattern (yellow stamp)</strong>
           <p style="margin:6px 0">
-            A yellow stamp marks a day on which the chart-owner judged today's observation
-            to match her <strong>established, unchanging baseline pattern</strong> (Base
-            Infertile Pattern / BIP).
+            A yellow stamp marks a day on which the chart-owner answered the
+            <em>Essential Sameness Question</em> &mdash; &ldquo;Is today essentially the
+            same as yesterday?&rdquo; &mdash; with <strong>yes</strong>, identifying the day
+            as part of her <strong>established, unchanging baseline</strong> (Base Infertile
+            Pattern / BIP). A <strong>no</strong> answer is a Point of Change and is charted
+            with white stamps instead.
           </p>
           <p style="margin:6px 0 0">
             Yellow stamps assume the BIP was established with a certified FertilityCare
@@ -95,6 +120,35 @@ export function renderSharedChartView(container: HTMLElement, data: SharedData):
     legend.appendChild(li);
   }
   content.appendChild(legend);
+
+  // Zoom toolbar (Normal / Compact / Trend) — same UX as the real chart
+  const currentZoom = getSavedZoom();
+  const toolbar = document.createElement('div');
+  toolbar.className = 'chart-toolbar';
+  const zoomGroup = document.createElement('div');
+  zoomGroup.className = 'chart-zoom';
+  zoomGroup.setAttribute('role', 'radiogroup');
+  zoomGroup.setAttribute('aria-label', 'Chart zoom');
+  const zoomLevels: { value: ChartZoom; label: string; aria: string }[] = [
+    { value: 'normal',  label: 'Normal',  aria: 'Normal zoom' },
+    { value: 'compact', label: 'Compact', aria: 'Compact zoom — smaller stamps' },
+    { value: 'trend',   label: 'Trend',   aria: 'Trend view — dense overview' },
+  ];
+  for (const lvl of zoomLevels) {
+    const btn = document.createElement('button');
+    btn.className = `chart-zoom-btn${lvl.value === currentZoom ? ' active' : ''}`;
+    btn.textContent = lvl.label;
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-label', lvl.aria);
+    btn.setAttribute('aria-checked', lvl.value === currentZoom ? 'true' : 'false');
+    btn.addEventListener('click', () => {
+      saveZoom(lvl.value);
+      renderSharedChartView(container, data);
+    });
+    zoomGroup.appendChild(btn);
+  }
+  toolbar.appendChild(zoomGroup);
+  content.appendChild(toolbar);
 
   // Build observation lookup by date
   const obsByDate = new Map<string, Observation>();
@@ -127,6 +181,7 @@ export function renderSharedChartView(container: HTMLElement, data: SharedData):
   // Chart table
   const wrapper = document.createElement('div');
   wrapper.className = 'chart-container';
+  if (currentZoom !== 'normal') wrapper.setAttribute('data-zoom', currentZoom);
 
   const table = document.createElement('table');
   table.className = 'chart-table';
@@ -204,6 +259,17 @@ export function renderSharedChartView(container: HTMLElement, data: SharedData):
           const stampEl = renderStamp(obs, {
             showDate: dateStr,
             showCode: true,
+            onClick: () => showSharedObservationDetail(obs),
+          });
+          stampEl.setAttribute('role', 'button');
+          stampEl.setAttribute('tabindex', '0');
+          stampEl.setAttribute('aria-haspopup', 'dialog');
+          stampEl.title = 'View observation details';
+          stampEl.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              showSharedObservationDetail(obs);
+            }
           });
           td.appendChild(stampEl);
         } else if (dayNum <= totalDays) {
@@ -255,4 +321,127 @@ export function renderSharedChartView(container: HTMLElement, data: SharedData):
   content.appendChild(link);
 
   container.appendChild(content);
+}
+
+/**
+ * Read-only observation detail modal for the shared view. Mirrors the look of
+ * the editable observation form (same modal shell, header, and stamp preview)
+ * but renders the recorded values as static text — no inputs, no saving.
+ */
+function showSharedObservationDetail(obs: Observation): void {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Observation details');
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-content';
+
+  const close = () => {
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') close();
+  };
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'obs-form-header';
+  const titleGroup = document.createElement('div');
+  titleGroup.className = 'obs-form-title-group';
+  const title = document.createElement('h2');
+  title.textContent = 'Observation';
+  titleGroup.appendChild(title);
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'obs-form-close';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.setAttribute('aria-label', 'Close');
+  closeBtn.addEventListener('click', close);
+  header.appendChild(titleGroup);
+  header.appendChild(closeBtn);
+  modal.appendChild(header);
+
+  // Date
+  const dateEl = document.createElement('div');
+  dateEl.className = 'obs-form-date';
+  dateEl.textContent = `${dayOfWeek(obs.date)}, ${displayDate(obs.date)} ${obs.date.slice(0, 4)}`;
+  modal.appendChild(dateEl);
+
+  // Stamp preview + code (same component as the form's preview)
+  const preview = document.createElement('div');
+  preview.className = 'obs-preview';
+  const [, mPart, dPart] = obs.date.split('-');
+  const dateBadge = document.createElement('span');
+  dateBadge.className = 'obs-preview-date';
+  dateBadge.textContent = `${parseInt(mPart, 10)}/${parseInt(dPart, 10)}`;
+  preview.appendChild(dateBadge);
+  preview.appendChild(renderStamp(obs, { large: true, showCode: false }));
+  const codeEl = document.createElement('span');
+  codeEl.className = 'obs-preview-code';
+  codeEl.textContent = buildObservationCode(
+    obs.bleeding,
+    obs.mucusStretch,
+    obs.mucusCharacteristics,
+    obs.frequency,
+    obs.brown,
+  );
+  preview.appendChild(codeEl);
+  modal.appendChild(preview);
+
+  // Recorded details — only rows that have a value
+  const details = document.createElement('dl');
+  details.className = 'obs-detail-list';
+  const addRow = (label: string, value: string) => {
+    const dt = document.createElement('dt');
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    dd.textContent = value;
+    details.appendChild(dt);
+    details.appendChild(dd);
+  };
+
+  // Bleeding obscures mucus (H/M); mirror the form's display by only showing
+  // mucus rows when the day isn't a heavy/moderate flow day.
+  const mucusObscured = obs.bleeding === 'H' || obs.bleeding === 'M';
+  if (obs.bleeding) {
+    addRow('Bleeding', BLEEDING_LABELS[obs.bleeding] + (obs.brown ? ' (brown)' : ''));
+  } else if (obs.brown) {
+    addRow('Bleeding', 'Brown spotting');
+  }
+  if (!mucusObscured && obs.mucusStretch) {
+    addRow('Mucus', MUCUS_STRETCH_LABELS[obs.mucusStretch]);
+  }
+  if (!mucusObscured && obs.mucusCharacteristics && obs.mucusCharacteristics.length > 0) {
+    addRow('Characteristics', obs.mucusCharacteristics.map(c => MUCUS_CHAR_LABELS[c]).join(', '));
+  }
+  if (!mucusObscured && obs.frequency) {
+    addRow('Frequency', FREQUENCY_LABELS[obs.frequency]);
+  }
+  if (obs.isPeakDay) addRow('Peak day', 'Yes');
+  if (obs.intercourse) addRow('Intercourse', 'Yes');
+  if (obs.notes && obs.notes.trim()) addRow('Notes', obs.notes.trim());
+
+  if (details.childElementCount === 0) {
+    const none = document.createElement('p');
+    none.style.cssText = 'text-align:center;color:var(--text-secondary);font-size:0.875rem;margin:12px 0 4px';
+    none.textContent = 'No additional details recorded for this day.';
+    modal.appendChild(none);
+  } else {
+    modal.appendChild(details);
+  }
+
+  // Read-only notice
+  const note = document.createElement('p');
+  note.style.cssText = 'text-align:center;color:var(--text-secondary);font-size:0.75rem;margin:16px 0 0';
+  note.textContent = 'Read-only — shared chart';
+  modal.appendChild(note);
+
+  overlay.appendChild(modal);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(overlay);
 }

@@ -1,7 +1,10 @@
 import { toPng } from 'html-to-image';
 import { db } from '../db/database';
 import { exportService } from '../services/export-service';
-import { authService } from '../services/auth-service';
+import { authService, wasPreviouslyLoggedIn, getLastAccount, wasSessionInvalidated } from '../services/auth-service';
+import { updateAuthBanner } from './auth-banner';
+import { updateHeaderAccount } from './app-shell';
+import { showSyncDiffModal, reconcileAfterLogin } from './sync-dialogs';
 import { syncService } from '../services/sync-service';
 import { shareService } from '../services/share-service';
 import { feedbackService } from '../services/feedback-service';
@@ -20,13 +23,15 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
   if (thisRender !== renderGeneration) return;
   await authService.checkAuth();
   if (thisRender !== renderGeneration) return;
+  // Reconcile the app-wide reminder banner with the freshly-checked state.
+  updateAuthBanner();
 
   const wrapper = document.createElement('div');
 
-  // Account & Sync card
+  // Account card
   const accountCard = document.createElement('div');
   accountCard.className = 'card';
-  accountCard.innerHTML = '<div class="section-label" style="margin-top:0">Account & Sync</div>';
+  accountCard.innerHTML = '<div class="section-label" style="margin-top:0">Account</div>';
 
   if (authService.state.loggedIn) {
     const lastSync = syncService.getLastSyncTime();
@@ -96,58 +101,16 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
     const syncBtns = document.createElement('div');
     syncBtns.style.cssText = 'display:flex;flex-direction:column;gap:8px';
 
-    const uploadBtn = document.createElement('button');
-    uploadBtn.className = 'btn btn-secondary btn-block';
-    uploadBtn.textContent = 'Upload to Server';
-    uploadBtn.addEventListener('click', async () => {
-      uploadBtn.disabled = true;
-      uploadBtn.classList.add('btn-loading');
-      try {
-        await syncService.upload();
-        showToast('Synced successfully', 'success');
-        renderSettingsView(container);
-      } catch (e) {
-        showToast((e as Error).message, 'error');
-        uploadBtn.disabled = false;
-        uploadBtn.classList.remove('btn-loading');
-      }
-    });
-    syncBtns.appendChild(uploadBtn);
-
-    const uploadHint = document.createElement('p');
-    uploadHint.style.cssText = 'font-size:0.75rem;color:var(--text-secondary);margin:-4px 0 4px;padding:0 4px';
-    uploadHint.textContent = 'Saves this device\u2019s data to the server, replacing what\u2019s stored there.';
-    syncBtns.appendChild(uploadHint);
-
-    const downloadBtn = document.createElement('button');
-    downloadBtn.className = 'btn btn-secondary btn-block';
-    downloadBtn.textContent = 'Download from Server';
-    downloadBtn.addEventListener('click', async () => {
-      if (!confirm('This will replace all local data with the server copy. Continue?')) return;
-      downloadBtn.disabled = true;
-      downloadBtn.classList.add('btn-loading');
-      try {
-        const result = await syncService.download();
-        showToast(`Downloaded ${result.cycles} cycles and ${result.observations} observations`, 'success');
-        renderSettingsView(container);
-      } catch (e) {
-        showToast((e as Error).message, 'error');
-        downloadBtn.disabled = false;
-        downloadBtn.classList.remove('btn-loading');
-      }
-    });
-    syncBtns.appendChild(downloadBtn);
-
-    const downloadHint = document.createElement('p');
-    downloadHint.style.cssText = 'font-size:0.75rem;color:var(--text-secondary);margin:-4px 0 4px;padding:0 4px';
-    downloadHint.textContent = 'Replaces this device\u2019s data with what\u2019s on the server.';
-    syncBtns.appendChild(downloadHint);
+    // Manual sync controls (Compare / Upload / Download) live in the Data
+    // Management section below \u2014 Account stays focused on identity + session.
 
     const logoutBtn = document.createElement('button');
     logoutBtn.className = 'btn btn-secondary btn-block';
     logoutBtn.textContent = 'Sign Out';
     logoutBtn.addEventListener('click', async () => {
       await authService.logout();
+      updateAuthBanner();
+      updateHeaderAccount();
       renderSettingsView(container);
     });
     syncBtns.appendChild(logoutBtn);
@@ -160,6 +123,45 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
 
     accountCard.appendChild(syncBtns);
   } else {
+    // Silent sign-out: signed in before on this device, the server confirmed
+    // the session is gone, and the user didn't deliberately sign out.
+    if (wasPreviouslyLoggedIn() && wasSessionInvalidated()) {
+      const signedOut = document.createElement('div');
+      signedOut.style.cssText = 'background:#FFF3E0;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:0.8125rem;color:#E65100;line-height:1.4';
+      const last = getLastAccount();
+      signedOut.append('You’ve been signed out');
+      if (last.email) {
+        signedOut.append(' of ');
+        const strong = document.createElement('strong');
+        strong.textContent = last.email;
+        signedOut.append(strong);
+      }
+      signedOut.append('. Sign back in to resume backing up and syncing your data.');
+
+      // Offer a one-tap local backup before they re-sync, so nothing is lost.
+      const backupRow = document.createElement('div');
+      backupRow.style.cssText = 'margin-top:10px';
+      const backupBtn = document.createElement('button');
+      backupBtn.type = 'button';
+      backupBtn.style.cssText = 'background:#E65100;color:#fff;border:none;border-radius:var(--radius-sm);padding:7px 14px;font-size:0.8125rem;font-weight:600;font-family:inherit;cursor:pointer';
+      backupBtn.textContent = 'Export a backup first';
+      backupBtn.addEventListener('click', async () => {
+        backupBtn.disabled = true;
+        try {
+          const done = await exportService.downloadBackup();
+          if (done) showToast('Backup saved — keep it somewhere safe', 'success');
+        } catch {
+          showToast('Could not create a backup', 'error');
+        } finally {
+          backupBtn.disabled = false;
+        }
+      });
+      backupRow.appendChild(backupBtn);
+      signedOut.appendChild(backupRow);
+
+      accountCard.appendChild(signedOut);
+    }
+
     const desc = document.createElement('p');
     desc.style.cssText = 'font-size:0.8125rem;color:var(--text-secondary);margin-bottom:12px';
     desc.textContent = 'Sign in to back up your data to the server and access it across devices. Your data always stays on your device too.';
@@ -183,6 +185,7 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
     emailInput.placeholder = 'Email';
     emailInput.autocomplete = 'email';
     emailInput.setAttribute('aria-label', 'Email');
+    emailInput.value = getLastAccount().email ?? '';
     form.appendChild(emailInput);
 
     const passwordInput = document.createElement('input');
@@ -230,6 +233,12 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
       }
       try {
         await authService.login(emailValue.toLowerCase(), passwordValue);
+        // Reconcile local vs account data before finishing: by default this
+        // backs up this device's data to the account; it only prompts when both
+        // sides have unique data (so a sign-in can't silently lose local entries).
+        await reconcileAfterLogin(() => authService.logout());
+        updateAuthBanner();
+        updateHeaderAccount();
         renderSettingsView(container);
       } catch (e) {
         errorMsg.textContent = (e as Error).message;
@@ -271,6 +280,8 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
       registerBtn.classList.add('btn-loading');
       try {
         await authService.register(nameInput.value.trim(), emailInput.value, passwordInput.value);
+        updateAuthBanner();
+        updateHeaderAccount();
         renderSettingsView(container);
       } catch (e) {
         errorMsg.textContent = (e as Error).message;
@@ -347,18 +358,29 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
           shareContent.appendChild(expiryInfo);
         }
 
+        const fullShareUrl = shareService.withKey(status.url!);
+        const shareUrl = fullShareUrl ?? status.url!;
+
         const urlInput = document.createElement('input');
         urlInput.type = 'text';
         urlInput.readOnly = true;
-        urlInput.value = status.url!;
+        urlInput.value = shareUrl;
         urlInput.style.cssText = 'font-size:0.8125rem';
         shareContent.appendChild(urlInput);
+
+        if (!fullShareUrl) {
+          const keyWarn = document.createElement('div');
+          keyWarn.className = 'field-hint';
+          keyWarn.style.cssText = 'color:#b00020';
+          keyWarn.textContent = "This device is missing the share key, so this link can't be opened. Regenerate the link here to get a working one.";
+          shareContent.appendChild(keyWarn);
+        }
 
         const copyBtn = document.createElement('button');
         copyBtn.className = 'btn btn-primary btn-block';
         copyBtn.textContent = 'Copy Link';
         copyBtn.addEventListener('click', async () => {
-          await navigator.clipboard.writeText(status.url!);
+          await navigator.clipboard.writeText(shareUrl);
           copyBtn.textContent = 'Copied!';
           setTimeout(() => { copyBtn.textContent = 'Copy Link'; }, 2000);
         });
@@ -425,6 +447,25 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
     viewGroup.appendChild(btn);
   }
   viewCard.appendChild(viewGroup);
+
+  // Show-sample-chart toggle — lets the user display the example chart
+  // (e.g. to demo the app) without touching their real data.
+  const sampleRow = document.createElement('div');
+  sampleRow.className = 'intercourse-toggle';
+  sampleRow.style.cssText = 'margin-top:14px';
+  sampleRow.appendChild(createSwitch(localStorage.getItem('forceSampleChart') === 'true', (v) => {
+    if (v) localStorage.setItem('forceSampleChart', 'true');
+    else localStorage.removeItem('forceSampleChart');
+  }));
+  const sampleLabel = document.createElement('label');
+  sampleLabel.textContent = 'Show sample chart';
+  sampleRow.appendChild(sampleLabel);
+  viewCard.appendChild(sampleRow);
+  const sampleHint = document.createElement('p');
+  sampleHint.style.cssText = 'font-size:0.75rem;color:var(--text-secondary);margin:6px 0 0;padding:0 4px';
+  sampleHint.textContent = 'Display the example chart instead of your own — handy for showing the app to someone. Your data is untouched.';
+  viewCard.appendChild(sampleHint);
+
   wrapper.appendChild(viewCard);
 
   // Theme
@@ -475,6 +516,68 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
 
   const btnGroup = document.createElement('div');
   btnGroup.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+
+  // Manual server sync (only when signed in) — moved here from the Account
+  // card so the common sections (Account, Provider Sharing) stay at the top.
+  if (authService.state.loggedIn) {
+    const compareBtn = document.createElement('button');
+    compareBtn.className = 'btn btn-secondary btn-block';
+    compareBtn.textContent = 'Compare with Server';
+    compareBtn.addEventListener('click', () => showSyncDiffModal(() => renderSettingsView(container)));
+    btnGroup.appendChild(compareBtn);
+
+    const compareHint = document.createElement('p');
+    compareHint.style.cssText = 'font-size:0.75rem;color:var(--text-secondary);margin:-4px 0 4px;padding:0 4px';
+    compareHint.textContent = 'Check whether this device and the server have any differences.';
+    btnGroup.appendChild(compareHint);
+
+    const uploadBtn = document.createElement('button');
+    uploadBtn.className = 'btn btn-secondary btn-block';
+    uploadBtn.textContent = 'Upload to Server';
+    uploadBtn.addEventListener('click', async () => {
+      uploadBtn.disabled = true;
+      uploadBtn.classList.add('btn-loading');
+      try {
+        await syncService.upload();
+        showToast('Synced successfully', 'success');
+        renderSettingsView(container);
+      } catch (e) {
+        showToast((e as Error).message, 'error');
+        uploadBtn.disabled = false;
+        uploadBtn.classList.remove('btn-loading');
+      }
+    });
+    btnGroup.appendChild(uploadBtn);
+
+    const uploadHint = document.createElement('p');
+    uploadHint.style.cssText = 'font-size:0.75rem;color:var(--text-secondary);margin:-4px 0 4px;padding:0 4px';
+    uploadHint.textContent = 'Saves this device’s data to the server, replacing what’s stored there.';
+    btnGroup.appendChild(uploadHint);
+
+    const downloadBtn = document.createElement('button');
+    downloadBtn.className = 'btn btn-secondary btn-block';
+    downloadBtn.textContent = 'Download from Server';
+    downloadBtn.addEventListener('click', async () => {
+      if (!confirm('This will replace all local data with the server copy. Continue?')) return;
+      downloadBtn.disabled = true;
+      downloadBtn.classList.add('btn-loading');
+      try {
+        const result = await syncService.download();
+        showToast(`Downloaded ${result.cycles} cycles and ${result.observations} observations`, 'success');
+        renderSettingsView(container);
+      } catch (e) {
+        showToast((e as Error).message, 'error');
+        downloadBtn.disabled = false;
+        downloadBtn.classList.remove('btn-loading');
+      }
+    });
+    btnGroup.appendChild(downloadBtn);
+
+    const downloadHint = document.createElement('p');
+    downloadHint.style.cssText = 'font-size:0.75rem;color:var(--text-secondary);margin:-4px 0 4px;padding:0 4px';
+    downloadHint.textContent = 'Replaces this device’s data with what’s on the server.';
+    btnGroup.appendChild(downloadHint);
+  }
 
   // Save Chart Image — renders chart off-screen and exports as PNG.
   // Uses navigator.share() for Capacitor/WebView compatibility, falls
@@ -553,8 +656,7 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
   exportJsonBtn.className = 'btn btn-secondary btn-block';
   exportJsonBtn.textContent = 'Export Data (JSON)';
   exportJsonBtn.addEventListener('click', async () => {
-    const json = await exportService.exportJSON();
-    exportService.downloadFile(json, `creighton-backup-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+    await exportService.downloadBackup();
   });
   btnGroup.appendChild(exportJsonBtn);
 
@@ -564,13 +666,13 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
   exportCsvBtn.textContent = 'Export Chart (CSV)';
   exportCsvBtn.addEventListener('click', async () => {
     const csv = await exportService.exportCSV();
-    exportService.downloadFile(csv, `creighton-chart-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
+    await exportService.shareOrDownload(csv, `creighton-chart-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
   });
   btnGroup.appendChild(exportCsvBtn);
 
   const downloadHint = document.createElement('p');
   downloadHint.style.cssText = 'font-size:0.75rem;color:var(--text-secondary);margin:-4px 0 4px;padding:0 4px';
-  downloadHint.textContent = 'Exported files save to your Downloads folder.';
+  downloadHint.textContent = 'Save or share the file to keep a backup off this device.';
   btnGroup.appendChild(downloadHint);
 
   // Import JSON
@@ -625,7 +727,10 @@ export async function renderSettingsView(container: HTMLElement): Promise<void> 
   }
 
   dataCard.appendChild(btnGroup);
-  wrapper.appendChild(dataCard);
+  // Place Data Management right after Provider Sharing (i.e. before the
+  // preference cards), so the data sync/backup controls sit just below the two
+  // most-used sections (Account, Provider Sharing).
+  wrapper.insertBefore(dataCard, viewCard);
 
   // Feedback / bug reports / feature requests
   const feedbackCard = document.createElement('div');
@@ -880,6 +985,21 @@ function showDeleteAccountModal(container: HTMLElement): void {
   });
   document.body.appendChild(overlay);
   requestAnimationFrame(() => pwInput.focus());
+}
+
+/** Toggle switch matching the observation form's switch styling. */
+function createSwitch(checked: boolean, onChange: (v: boolean) => void): HTMLElement {
+  const label = document.createElement('label');
+  label.className = 'switch';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.checked = checked;
+  input.addEventListener('change', () => onChange(input.checked));
+  const slider = document.createElement('span');
+  slider.className = 'switch-slider';
+  label.appendChild(input);
+  label.appendChild(slider);
+  return label;
 }
 
 const EYE_OPEN = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';

@@ -8,6 +8,44 @@ export interface AuthState {
   emailVerified?: boolean;
 }
 
+// Persisted hints (survive a lost session) so the app can tell the difference
+// between "never signed in" and "signed in before, but the session is gone".
+const AUTH_EXPECTED_KEY = 'authExpected';
+const LAST_EMAIL_KEY = 'lastAccountEmail';
+const LAST_NAME_KEY = 'lastAccountName';
+
+/** Record that this device has an account and currently expects to be signed in. */
+function rememberAccount(email?: string, firstName?: string): void {
+  localStorage.setItem(AUTH_EXPECTED_KEY, '1');
+  if (email) localStorage.setItem(LAST_EMAIL_KEY, email);
+  if (firstName) localStorage.setItem(LAST_NAME_KEY, firstName);
+}
+
+/**
+ * True when the user signed in on this device before and we still expect a
+ * valid session — i.e. they did NOT deliberately sign out. Used to surface a
+ * "you've been signed out" reminder when the session has silently expired.
+ */
+export function wasPreviouslyLoggedIn(): boolean {
+  return localStorage.getItem(AUTH_EXPECTED_KEY) === '1';
+}
+
+/** The last account known on this device, for prefilling the sign-in form. */
+export function getLastAccount(): { email?: string; firstName?: string } {
+  return {
+    email: localStorage.getItem(LAST_EMAIL_KEY) || undefined,
+    firstName: localStorage.getItem(LAST_NAME_KEY) || undefined,
+  };
+}
+
+// True only when the server explicitly told us the session is invalid this run
+// (HTTP response, not a network error). Lets the UI flag a real sign-out while
+// staying quiet when the app is simply offline — it's an offline-first PWA.
+let sessionInvalidated = false;
+export function wasSessionInvalidated(): boolean {
+  return sessionInvalidated;
+}
+
 export const authService = {
   state: { loggedIn: false } as AuthState,
 
@@ -17,12 +55,21 @@ export const authService = {
       if (res.ok) {
         const data = await res.json();
         this.state = { loggedIn: true, email: data.email, firstName: data.firstName, userId: data.id, emailVerified: data.emailVerified };
+        rememberAccount(data.email, data.firstName);
+        sessionInvalidated = false;
       } else {
+        // Server says we're not authenticated. We intentionally DON'T clear the
+        // "expected auth" hint here — that, plus this confirmed invalidation, is
+        // the signal the UI uses to flag a silent sign-out.
         this.state = { loggedIn: false };
         cryptoService.clearKey();
+        sessionInvalidated = true;
       }
     } catch {
+      // Couldn't reach the server (offline / transient). Not a confirmed
+      // sign-out — leave the reminder quiet so we don't false-alarm offline.
       this.state = { loggedIn: false };
+      sessionInvalidated = false;
     }
     return this.state;
   },
@@ -39,6 +86,7 @@ export const authService = {
     }
     const data = await res.json();
     this.state = { loggedIn: true, email: data.email, firstName: data.firstName, userId: data.id, emailVerified: data.emailVerified };
+    rememberAccount(data.email, data.firstName);
 
     // Derive and store E2E encryption key
     if (data.encryptionSalt) {
@@ -58,6 +106,7 @@ export const authService = {
     }
     const data = await res.json();
     this.state = { loggedIn: true, email: data.email, firstName: data.firstName, userId: data.id, emailVerified: data.emailVerified };
+    rememberAccount(data.email, data.firstName);
 
     // Derive and store E2E encryption key
     if (data.encryptionSalt) {
@@ -132,6 +181,7 @@ export const authService = {
     const data = await res.json();
     if (data.id) {
       this.state = { loggedIn: true, email: data.email, firstName: data.firstName, userId: data.id };
+      rememberAccount(data.email, data.firstName);
 
       // Derive new E2E key with new password and new salt
       if (data.encryptionSalt) {
@@ -144,6 +194,9 @@ export const authService = {
     await fetch('/api/auth/logout', { method: 'POST' });
     this.state = { loggedIn: false };
     cryptoService.clearKey();
+    // Deliberate sign-out: drop the "expected auth" hint so we don't nag the
+    // user to sign back in. Keep the last email around to prefill the form.
+    localStorage.removeItem(AUTH_EXPECTED_KEY);
   },
 
   async deleteAccount(password: string): Promise<void> {
@@ -158,5 +211,9 @@ export const authService = {
     }
     this.state = { loggedIn: false };
     cryptoService.clearKey();
+    // Account no longer exists — forget everything about it on this device.
+    localStorage.removeItem(AUTH_EXPECTED_KEY);
+    localStorage.removeItem(LAST_EMAIL_KEY);
+    localStorage.removeItem(LAST_NAME_KEY);
   },
 };

@@ -5,6 +5,7 @@ import './styles/form.css';
 import './styles/calendar.css';
 import { initSettings, db } from './db/database';
 import { initAppShell } from './components/app-shell';
+import { updateAuthBanner } from './components/auth-banner';
 import { authService } from './services/auth-service';
 import { syncService } from './services/sync-service';
 import { cycleService } from './services/cycle-service';
@@ -33,6 +34,9 @@ async function main(): Promise<void> {
   await cycleService.evaluateCycles().catch(() => {});
 
   initAppShell();
+
+  // Flag a silent sign-out (signed in before, but the session is now gone).
+  updateAuthBanner();
 
   // First-visit disclaimer popup
   if (!localStorage.getItem('disclaimerDismissed')) {
@@ -67,11 +71,17 @@ async function main(): Promise<void> {
     initCookieConsent();
   }
 
-  // Auto-download from server on load if logged in, then re-render
+  // Sync from server on load if logged in — but never silently overwrite local
+  // data. safeAutoSync only pulls when nothing local would be lost; if this
+  // device has entries the server lacks, it surfaces the conflict instead.
   if (auth.loggedIn) {
-    syncService.download()
-      .then(() => {
-        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    syncService.safeAutoSync()
+      .then(({ action }) => {
+        if (action === 'downloaded') {
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+        } else if (action === 'conflict') {
+          showToast('This device has chart entries not saved to your account — open Settings → Account to review', 'error');
+        }
       })
       .catch(() => showToast('Could not sync from server', 'error'));
   }

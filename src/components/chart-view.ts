@@ -4,7 +4,15 @@ import { renderStamp } from './stamp';
 import { showObservationForm } from './observation-form';
 import { displayDate, addDays, daysBetween, today } from '../utils/date-utils';
 import { generateSampleData } from '../utils/sample-data';
-import type { Observation } from '../db/models';
+import type { Observation, Cycle } from '../db/models';
+
+// In-memory sample dataset, generated once and mutated by demo edits so they
+// persist across re-renders within the session without ever touching the DB.
+let sampleData: { cycles: Cycle[]; observationsByCycle: Map<number, Observation[]> } | null = null;
+function getSampleData() {
+  if (!sampleData) sampleData = generateSampleData();
+  return sampleData;
+}
 
 const MIN_CHART_COLUMNS = 35;
 
@@ -23,6 +31,14 @@ function saveZoom(z: ChartZoom): void {
 
 export async function renderChartView(container: HTMLElement): Promise<void> {
   container.innerHTML = '';
+
+  // "Show sample chart" toggle (Settings → Default View) forces the example
+  // chart regardless of real data, so the user can demo the app without
+  // exposing their own observations.
+  if (localStorage.getItem('forceSampleChart') === 'true') {
+    renderSampleChart(container);
+    return;
+  }
 
   const cycles = await cycleService.getAll();
 
@@ -73,19 +89,23 @@ export async function renderChartView(container: HTMLElement): Promise<void> {
         popup.className = 'bip-popup card';
         popup.style.cssText = 'margin-top:8px;padding:12px;font-size:0.8125rem;line-height:1.5';
         popup.innerHTML = `
-          <strong>Infertile pattern</strong>
+          <strong>Infertile pattern (yellow stamp)</strong>
           <p style="margin:6px 0">
-            A yellow stamp marks a day that matches your <strong>established, unchanging
-            baseline pattern</strong> &mdash; what Creighton calls your Base Infertile
-            Pattern (BIP).
+            Some women &mdash; especially postpartum, breastfeeding, with PCOS, or in long
+            cycles &mdash; see some discharge almost every day. A yellow stamp marks a day
+            that matches that <strong>established, unchanging baseline</strong> &mdash; what
+            Creighton calls the Base Infertile Pattern (BIP).
           </p>
           <p style="margin:6px 0">
-            Each day, ask the <em>Essential Sameness Question</em>: &ldquo;Is today
-            essentially the same as my baseline?&rdquo; If yes &rarr; yellow. If something
-            has changed (more wet, clear, stretchy, or lubricative) &rarr; that's a
-            <strong>Point of Change</strong>, the fertile window has opened, and the day
-            should not be yellow.
+            Each day, ask the <em>Essential Sameness Question</em>:
+            <strong>&ldquo;Is today essentially the same as yesterday?&rdquo;</strong>
           </p>
+          <ul style="margin:6px 0;padding-left:18px">
+            <li><strong>Yes</strong> &rarr; it's part of your baseline &rarr; yellow stamp (infertile).</li>
+            <li><strong>No</strong> &rarr; the pattern changed (more wet, clear, stretchy, or
+              lubricative). That's a <strong>Point of Change</strong>: fertility is presumed to
+              begin and you switch to white stamps until the Peak Day.</li>
+          </ul>
           <p style="margin:6px 0 0">
             <strong>Important:</strong> your baseline must be established with a certified
             FertilityCare Practitioner across at least two cycles before you start using
@@ -275,7 +295,6 @@ export async function renderChartView(container: HTMLElement): Promise<void> {
 }
 
 function renderSampleChart(container: HTMLElement): void {
-  const CHART_COLUMNS = MIN_CHART_COLUMNS;
   // Banner
   const banner = document.createElement('div');
   banner.className = 'sample-banner';
@@ -284,11 +303,19 @@ function renderSampleChart(container: HTMLElement): void {
     <p>This is an example of what your chart will look like. Tap the + button to record your first observation and start tracking.</p>
   `;
 
+  const forced = localStorage.getItem('forceSampleChart') === 'true';
   const dismissBtn = document.createElement('button');
   dismissBtn.className = 'btn btn-secondary';
   dismissBtn.style.cssText = 'margin-top:8px;font-size:0.8125rem;padding:8px 16px;min-height:36px';
-  dismissBtn.textContent = 'Dismiss Sample';
+  dismissBtn.textContent = forced ? 'Show my chart' : 'Dismiss Sample';
   dismissBtn.addEventListener('click', () => {
+    if (forced) {
+      // Sample was shown via the Settings toggle — turn it off and return
+      // to the user's real chart, leaving their data untouched.
+      localStorage.removeItem('forceSampleChart');
+      renderChartView(container);
+      return;
+    }
     localStorage.setItem('sampleDismissed', 'true');
     container.innerHTML = '';
     const empty = document.createElement('div');
@@ -300,7 +327,8 @@ function renderSampleChart(container: HTMLElement): void {
 
   container.appendChild(banner);
 
-  // Legend
+  // Full legend — same set the real chart uses, including chick + intercourse
+  // so the sample teaches every visual element a user will encounter.
   const legend = document.createElement('div');
   legend.className = 'chart-legend';
   const legendItems = [
@@ -308,24 +336,85 @@ function renderSampleChart(container: HTMLElement): void {
     { color: 'red', label: 'Bleeding' },
     { color: 'white', label: 'Fertile (Mucus)' },
     { color: 'yellow', label: 'Infertile pattern' },
+    { color: 'chick', label: 'Fertile day' },
+    { color: 'intercourse', label: 'Intercourse' },
   ];
   for (const item of legendItems) {
     const li = document.createElement('div');
     li.className = 'legend-item';
-    li.innerHTML = `<span class="legend-dot legend-dot-${item.color}"></span>${item.label}`;
+    if (item.color === 'chick') {
+      li.innerHTML = `<span class="legend-dot legend-dot-chick">🐣</span>${item.label}`;
+    } else if (item.color === 'intercourse') {
+      li.innerHTML = `<span class="legend-dot legend-dot-intercourse"></span>${item.label}`;
+    } else {
+      li.innerHTML = `<span class="legend-dot legend-dot-${item.color}"></span>${item.label}`;
+    }
     legend.appendChild(li);
   }
   container.appendChild(legend);
 
-  const { cycles, observationsByCycle } = generateSampleData();
+  // Zoom toolbar (Normal / Compact / Trend) — same UX as the real chart
+  const toolbar = document.createElement('div');
+  toolbar.className = 'chart-toolbar';
+  const zoomGroup = document.createElement('div');
+  zoomGroup.className = 'chart-zoom';
+  zoomGroup.setAttribute('role', 'radiogroup');
+  zoomGroup.setAttribute('aria-label', 'Chart zoom');
+  const zoomLevels: { value: ChartZoom; label: string; aria: string }[] = [
+    { value: 'normal',  label: 'Normal',  aria: 'Normal zoom' },
+    { value: 'compact', label: 'Compact', aria: 'Compact zoom — smaller stamps' },
+    { value: 'trend',   label: 'Trend',   aria: 'Trend view — dense overview' },
+  ];
+  const currentZoom = getSavedZoom();
+  for (const lvl of zoomLevels) {
+    const btn = document.createElement('button');
+    btn.className = `chart-zoom-btn${lvl.value === currentZoom ? ' active' : ''}`;
+    btn.textContent = lvl.label;
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-label', lvl.aria);
+    btn.setAttribute('aria-checked', lvl.value === currentZoom ? 'true' : 'false');
+    btn.addEventListener('click', () => {
+      saveZoom(lvl.value);
+      container.innerHTML = '';
+      renderSampleChart(container);
+    });
+    zoomGroup.appendChild(btn);
+  }
+  toolbar.appendChild(zoomGroup);
+  container.appendChild(toolbar);
+
+  const { cycles, observationsByCycle } = getSampleData();
+
+  // Flat list of all sample observations + a helper to apply a demo edit to
+  // the in-memory sample set (never the DB).
+  const allSampleObs = () => [...observationsByCycle.values()].flat();
+  function applySampleEdit(updated: Observation) {
+    for (const [cid, list] of observationsByCycle) {
+      const idx = list.findIndex(o => o.date === updated.date);
+      if (idx >= 0) {
+        list[idx] = { ...updated, cycleId: cid };
+        return;
+      }
+    }
+  }
+  function removeSampleObs(date: string) {
+    for (const list of observationsByCycle.values()) {
+      const idx = list.findIndex(o => o.date === date);
+      if (idx >= 0) { list.splice(idx, 1); return; }
+    }
+  }
+
+  // Grow the chart wide enough to fit the longest cycle in the sample data.
+  const longestCycle = cycles.reduce((max, c) => Math.max(max, c.length ?? 0), 0);
+  const CHART_COLUMNS = Math.max(MIN_CHART_COLUMNS, longestCycle);
 
   // Chart table
   const wrapper = document.createElement('div');
   wrapper.className = 'chart-container';
+  if (currentZoom !== 'normal') wrapper.setAttribute('data-zoom', currentZoom);
 
   const table = document.createElement('table');
   table.className = 'chart-table';
-  table.style.opacity = '0.7';
 
   // Header row
   const thead = document.createElement('thead');
@@ -345,6 +434,8 @@ function renderSampleChart(container: HTMLElement): void {
   // Cycle rows (newest first)
   const tbody = document.createElement('tbody');
   const sortedCycles = [...cycles].reverse();
+
+  let mostRecentCell: HTMLTableCellElement | null = null;
 
   for (let i = 0; i < sortedCycles.length; i++) {
     const cycle = sortedCycles[i];
@@ -392,19 +483,30 @@ function renderSampleChart(container: HTMLElement): void {
         const obs = obsByDay.get(dayNum);
 
         if (obs) {
+          const dateStr = addDays(cycle.startDate, dayNum - 1);
           const stampEl = renderStamp(obs, {
-            showDate: addDays(cycle.startDate, dayNum - 1),
+            showDate: dateStr,
             showCode: true,
+            onClick: () => {
+              // Open the form in sample mode — edits update the in-memory
+              // sample set and never touch the user's real data.
+              showObservationForm(dateStr, obs, () => renderChartView(container), {
+                observations: allSampleObs(),
+                onSave: (updated) => applySampleEdit(updated),
+                onDelete: (date) => removeSampleObs(date),
+              });
+            },
           });
           td.appendChild(stampEl);
+          if (i === 0) {
+            mostRecentCell = td;
+          }
         }
 
-        // Peak day column highlight
-        if (cycle.peakDay) {
-          const peakDayNum = daysBetween(cycle.startDate, cycle.peakDay) + 1;
-          if (dayNum === peakDayNum) {
-            td.classList.add('chart-peak-col');
-          }
+        // Peak day column highlight — supports multiple peaks
+        const peakObs = obsByDay.get(dayNum);
+        if (peakObs?.isPeakDay) {
+          td.classList.add('chart-peak-col');
         }
       }
 
@@ -417,4 +519,12 @@ function renderSampleChart(container: HTMLElement): void {
   table.appendChild(tbody);
   wrapper.appendChild(table);
   container.appendChild(wrapper);
+
+  if (mostRecentCell) {
+    const cell = mostRecentCell;
+    requestAnimationFrame(() => {
+      const target = cell.offsetLeft + cell.offsetWidth - wrapper.clientWidth + 20;
+      wrapper.scrollLeft = Math.max(0, target);
+    });
+  }
 }

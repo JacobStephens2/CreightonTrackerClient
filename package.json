@@ -2,8 +2,13 @@
   "license": "AGPL-3.0-or-later",
   "name": "chart35-client",
   "private": true,
-  "version": "2.2.0",
-  "description": "Track your fertility cycle using the Creighton Model",
+  "version": "2.4.1",
+  "description": "Chart35 — the public web/PWA client for an independent Creighton Model FertilityCare System (CrMS) fertility charting app.",
+  "homepage": "https://chart35.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JacobStephens2/Chart35Client.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

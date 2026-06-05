@@ -94,6 +94,42 @@ export const cryptoService = {
     return new TextDecoder().decode(plainBuffer);
   },
 
+  generateShareKey(): string {
+    return bufferToBase64(crypto.getRandomValues(new Uint8Array(32)));
+  },
+
+  async encryptWithKey(plaintext: string, rawKeyBase64: string): Promise<string> {
+    const key = await crypto.subtle.importKey(
+      'raw', base64ToBuffer(rawKeyBase64).buffer as ArrayBuffer,
+      { name: 'AES-GCM', length: 256 }, false, ['encrypt'],
+    );
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const cipherBuffer = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext));
+    const cipherArray = new Uint8Array(cipherBuffer);
+    const ciphertext = cipherArray.slice(0, -16);
+    const tag = cipherArray.slice(-16);
+    return `${bufferToBase64(iv)}:${bufferToBase64(tag)}:${bufferToBase64(ciphertext)}`;
+  },
+
+  async decryptWithKey(encoded: string, rawKeyBase64: string): Promise<string> {
+    const key = await crypto.subtle.importKey(
+      'raw', base64ToBuffer(rawKeyBase64).buffer as ArrayBuffer,
+      { name: 'AES-GCM', length: 256 }, false, ['decrypt'],
+    );
+    const parts = encoded.split(':');
+    if (parts.length !== 3) throw new Error('Invalid encrypted data format');
+    const iv = base64ToBuffer(parts[0]);
+    const tag = base64ToBuffer(parts[1]);
+    const ciphertext = base64ToBuffer(parts[2]);
+    const combined = new Uint8Array(ciphertext.length + tag.length);
+    combined.set(ciphertext);
+    combined.set(tag, ciphertext.length);
+    const plainBuffer = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: iv.buffer as ArrayBuffer }, key, combined.buffer as ArrayBuffer,
+    );
+    return new TextDecoder().decode(plainBuffer);
+  },
+
   hasKey(): boolean {
     return !!_cachedKey || !!localStorage.getItem(E2E_KEY_STORAGE);
   },

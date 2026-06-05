@@ -107,6 +107,52 @@
   flex-shrink: 0;
 }
 
+/* Note shown in place of mucus sections on heavy/moderate flow days */
+.obs-flow-note {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background: var(--surface-low);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 4px 0;
+}
+
+/* Essential Sameness ribbon — yesterday's observation for comparison */
+.obs-esq {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  background: var(--surface-low);
+  border-radius: 18px;
+  font-size: 0.8rem;
+}
+
+.obs-esq-label {
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.obs-esq .stamp {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.obs-esq-code {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--text-secondary);
+}
+
+.obs-esq-q {
+  margin-left: auto;
+  font-style: italic;
+  color: var(--text-muted);
+  text-align: right;
+}
+
 /* Toggle group within form */
 .obs-form .toggle-group {
   margin-bottom: 4px;
@@ -243,4 +289,26 @@
 .peak-toggle-label span:last-child {
   font-size: 0.75rem;
   color: var(--text-secondary);
+}
+
+/* Read-only observation detail list (shared chart view) */
+.obs-detail-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  margin: 16px 0 0;
+}
+
+.obs-detail-list dt {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.obs-detail-list dd {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

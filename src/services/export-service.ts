@@ -209,4 +209,33 @@ export const exportService = {
     a.click();
     URL.revokeObjectURL(url);
   },
+
+  /**
+   * Save/share a file. Prefers the Web Share API (the only thing that reliably
+   * produces a file in the Capacitor/Android WebView), falling back to an
+   * anchor download on desktop browsers. Returns false if the user cancelled.
+   */
+  async shareOrDownload(content: string, filename: string, mimeType: string): Promise<boolean> {
+    try {
+      if (navigator.share && navigator.canShare) {
+        const file = new File([content], filename, { type: mimeType });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: filename });
+          return true;
+        }
+      }
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return false; // user dismissed the share sheet
+      // otherwise fall through to the download fallback
+    }
+    this.downloadFile(content, filename, mimeType);
+    return true;
+  },
+
+  /** Convenience: export all data as a JSON backup and save/share it. */
+  async downloadBackup(): Promise<boolean> {
+    const json = await this.exportJSON();
+    const filename = `creighton-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    return this.shareOrDownload(json, filename, 'application/json');
+  },
 };
