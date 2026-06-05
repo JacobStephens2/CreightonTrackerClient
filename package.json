@@ -1,4 +1,5 @@
 {
+  "license": "AGPL-3.0-or-later",
   "name": "chart35-client",
   "private": true,
   "version": "2.2.0",
